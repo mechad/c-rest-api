@@ -91,10 +91,12 @@ void* accept_client(void* clientptr)
     conn.conn_fd = *((int*)clientptr);
 
     Request r;
+    init_request(&r);
     parse_request(&r, &conn);
     header_404(&conn);
     printf("request handled\n");
     close(conn.conn_fd);
+    free_request(&r);
 
     return NULL;
 }

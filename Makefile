@@ -10,6 +10,8 @@ DEP_FILES=\
 	src/server.o\
 	src/requests/request.o\
 	src/utils/memory.o\
+	src/utils/hashtable.o\
+	src/utils/json.o\
 
 # Locations of object files
 OBJ_FILES=\
@@ -17,6 +19,8 @@ OBJ_FILES=\
 	src/server.o\
 	src/requests/request.o\
 	src/utils/memory.o\
+	src/utils/hashtable.o\
+	src/utils/json.o\
 
 all: server
 
@@ -36,5 +40,13 @@ src/requests/request.o: src/requests/request.c
 src/utils/memory.o: src/utils/memory.c
 	gcc $(CFLAGS) -fPIC -c src/utils/memory.c -o src/utils/memory.o
 
+src/utils/hashtable.o: src/utils/hashtable.c
+	gcc $(CFLAGS) -fPIC -c src/utils/hashtable.c -o src/utils/hashtable.o
+
+src/utils/json.o: src/utils/json.c
+	gcc $(CFLAGS) -fPIC -c src/utils/json.c -o src/utils/json.o
+
 clean:
 	find . -type f -name "*.o" | xargs rm -v
+
+.PHONY: server

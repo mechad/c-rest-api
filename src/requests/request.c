@@ -41,7 +41,7 @@ static int read_line(String* m, String* buffer, int start)
     char c = 0;
 
     while (i < m->len) {
-        c = m->data[i];
+        c = m->chars[i];
 
         // ignore the \r
         if (c == '\r')
@@ -98,12 +98,33 @@ static void read_full_request(Connection* conn, String* m)
     }
 }
 
+static void parse_content(Request* r, String* m)
+{
+    //TODO: make sure that there is a content lenght and the data matches the length
+    // Go through message until you get the empty line
+    int i, line_len = 0;
+    for (i = 0; i < m->len; i++) {
+        if (m->chars[i] == '\n') {
+            if (line_len == 0)
+                break;
+            else
+                line_len = 0;
+        } else {
+            line_len++;
+        }
+    }
+
+    for (; i < m->len; i++) {
+        STRING_APPEND(&r->content, m->chars[i]);
+    }
+}
+
 static void parse_request_type(Request* r, String* line)
 {
     char buf[16];
 
-    for (int i = 0; line->data[i] != ' ' && i < line->len; i++) {
-        buf[i] = line->data[i];
+    for (int i = 0; line->chars[i] != ' ' && i < line->len; i++) {
+        buf[i] = line->chars[i];
     }
 
     if (strncmp(buf, "GET", 3) == 0)
@@ -136,8 +157,8 @@ static void parse_uri(Request* r, String* line)
         break;
     }
 
-    for (i = start; line->data[i] != ' ' && i < line->len; i++) {
-        STRING_APPEND(&r->uri, line->data[i]);
+    for (i = start; line->chars[i] != ' ' && i < line->len; i++) {
+        STRING_APPEND(&r->uri, line->chars[i]);
     }
 
     STRING_APPEND(&r->uri, '\0');
@@ -163,10 +184,12 @@ void parse_request(Request* r, Connection* conn)
     STRING_INIT(&m);
     STRING_INIT(&tmp);
     read_full_request(conn, &m);
-    //printf("FULL MESSAGE:\n%s\n", m.data);
+    printf("FULL MESSAGE:\n%s\n", m.chars);
     read_line(&m, &tmp, 0);
     parse_request_type(r, &tmp);
     parse_uri(r, &tmp);
+    if (r->type == POST)
+        parse_content(r, &m);
     print_request(r);
     STRING_FREE(&m);
     STRING_FREE(&tmp);
@@ -176,7 +199,7 @@ void print_request(Request* r)
 {
     printf("Request type: %d\n", r->type);
     printf("Request uri_length: %d\n", r->uri.len);
-    printf("Request uri: %s\n", r->uri.data);
+    printf("Request uri: %s\n", r->uri.chars);
     printf("Request content_length: %d\n", r->content.len);
-    printf("Request content: %s\n", r->content.data);
+    printf("Request content: %s\n", r->content.chars);
 }
