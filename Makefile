@@ -1,57 +1,54 @@
+# Makefile for building. It expects variables to be passed in for:
+#
+# MODE         "debug" or "release".
+# NAME         Name of the output executable (and object file directory).
+# SOURCE_DIR   Directory where source files and headers are found.
+CC=gcc
 CFLAGS := -std=c99 -pthread -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-function
+SOURCE_DIR = src
 
-ifdef DEBUG
-	CFLAGS += -g
+# Mode configuration.
+ifeq ($(MODE),debug)
+	CFLAGS += -O0 -DDEBUG -g
+	BUILD_DIR := build/debug
+else
+	CFLAGS += -O3 -flto
+	BUILD_DIR := build/release
 endif
 
-# Depencies for compiling
-DEP_FILES=\
-	src/http.o\
-	src/datatypes.o\
-	src/server.o\
-	src/requests/request.o\
-	src/utils/memory.o\
-	src/utils/hashtable.o\
-	src/utils/json.o\
+# Files.
+HEADERS := $(wildcard $(SOURCE_DIR)/*.h)
+HEADERS += $(wildcard $(SOURCE_DIR)/*/*.h)
+SOURCES := $(wildcard $(SOURCE_DIR)/*.c)
+SOURCES += $(wildcard $(SOURCE_DIR)/*/*.c)
+OBJECTS := $(addprefix $(BUILD_DIR)/$(NAME)/, $(notdir $(SOURCES:.c=.o)))
+# Targets ---------------------------------------------------------------------
 
-# Locations of object files
-OBJ_FILES=\
-	src/http.o\
-	src/datatypes.o\
-	src/server.o\
-	src/requests/request.o\
-	src/utils/memory.o\
-	src/utils/hashtable.o\
-	src/utils/json.o\
+# Link the interpreter.
+build/$(NAME): $(OBJECTS)
+	@ printf "%8s %-40s %s\n" $(CC) $@ "$(CFLAGS)"
+	@ mkdir -p build
+	@ $(CC) $(CFLAGS) $^ -o $@
 
-all: server
+# Compile object files.
+$(BUILD_DIR)/$(NAME)/%.o: $(SOURCE_DIR)/%.c $(HEADERS)
+	@ printf "%8s %-40s %s\n" $(CC) $< "$(CFLAGS)"
+	@ mkdir -p $(BUILD_DIR)/$(NAME)
+	@ $(CC) -c $(CFLAGS) -o $@ $<
 
+# Build subdirectory folders
+# TODO: is there cleaner way to do this?
+$(BUILD_DIR)/$(NAME)/%.o: $(SOURCE_DIR)/utils/%.c $(HEADERS)
+	@ printf "%8s %-40s %s\n" $(CC) $< "$(CFLAGS)"
+	@ mkdir -p $(BUILD_DIR)/$(NAME)
+	@ $(CC) -c $(CFLAGS) -o $@ $<
 
-server: $(DEP_FILES)
-	gcc src/main.c -o server $(OBJ_FILES) $(CFLAGS)
-
-src/http.o: src/http.c
-	gcc $(CFLAGS) -fPIC -c src/http.c -o src/http.o
-
-src/datatypes.o: src/datatypes.c
-	gcc $(CFLAGS) -fPIC -c src/datatypes.c -o src/datatypes.o
-
-src/server.o: src/server.c
-	gcc $(CFLAGS) -fPIC -c src/server.c -o src/server.o
-
-src/requests/request.o: src/requests/request.c
-	gcc $(CFLAGS) -fPIC -c src/requests/request.c -o src/requests/request.o
-
-src/utils/memory.o: src/utils/memory.c
-	gcc $(CFLAGS) -fPIC -c src/utils/memory.c -o src/utils/memory.o
-
-src/utils/hashtable.o: src/utils/hashtable.c
-	gcc $(CFLAGS) -fPIC -c src/utils/hashtable.c -o src/utils/hashtable.o
-
-src/utils/json.o: src/utils/json.c
-	gcc $(CFLAGS) -fPIC -c src/utils/json.c -o src/utils/json.o
+$(BUILD_DIR)/$(NAME)/%.o: $(SOURCE_DIR)/requests/%.c $(HEADERS)
+	@ printf "%8s %-40s %s\n" $(CC) $< "$(CFLAGS)"
+	@ mkdir -p $(BUILD_DIR)/$(NAME)
+	@ $(CC) -c $(CFLAGS) -o $@ $<
 
 clean:
 	find . -type f -name "*.o" | xargs rm -v
 
-.PHONY: server
+.PHONY: default
