@@ -7,6 +7,7 @@ endif
 # Depencies for compiling
 DEP_FILES=\
 	src/http.o\
+	src/datatypes.o\
 	src/server.o\
 	src/requests/request.o\
 	src/utils/memory.o\
@@ -16,6 +17,7 @@ DEP_FILES=\
 # Locations of object files
 OBJ_FILES=\
 	src/http.o\
+	src/datatypes.o\
 	src/server.o\
 	src/requests/request.o\
 	src/utils/memory.o\
@@ -30,6 +32,9 @@ server: $(DEP_FILES)
 
 src/http.o: src/http.c
 	gcc $(CFLAGS) -fPIC -c src/http.c -o src/http.o
+
+src/datatypes.o: src/datatypes.c
+	gcc $(CFLAGS) -fPIC -c src/datatypes.c -o src/datatypes.o
 
 src/server.o: src/server.c
 	gcc $(CFLAGS) -fPIC -c src/server.c -o src/server.o

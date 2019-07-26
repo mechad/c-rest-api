@@ -66,4 +66,8 @@ typedef struct {
     (str)->capacity = 0; \
     (str)->hash = 0;
 
+String* copy_chars(const char* chars, int length);
+String* copy_string(const String* str);
+
+
 #endif

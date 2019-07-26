@@ -17,9 +17,11 @@ int main(int argc, char const* argv[])
     String value;
     STRING_INIT(&value)
 
-    char t_json[] = "{\"name\": \"sample\", \"number\": \"1234567\"}";
+    // char t_json[] = "{\"name\": \"sample\", \"number\": \"1234567\"}";
+    // STRING_APPEND_CSTRING(&value, t_json, 40);
+    char t_json[] = "{\"name\": \"sample\", \"number\": {\"real\": \"1234567\"}}";
+    STRING_APPEND_CSTRING(&value, t_json, 50);
 
-    STRING_APPEND_CSTRING(&value, t_json, 40);
 
     parse_json(&value, NULL);
 

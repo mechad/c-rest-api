@@ -89,6 +89,11 @@ static void adjust_capacity(Table* table, int capacity)
 
 bool table_get(Table* table, String* key, DataValue* value)
 {
+    // Create hash for the key if there is none
+    if (key->hash == 0) {
+        key->hash = hash_string(key->chars, key->len);
+    }
+
     if (table->entries == NULL)
         return false;
 
@@ -175,3 +180,15 @@ String* table_find_string(Table* table, const char* chars, int length, uint32_t 
         index = (index + 1) % table->capacity;
     }
 }
+
+Table* copy_table(const Table* table){
+    Entry* tmp_entries = ALLOCATE(Entry, table->capacity);
+    memcpy(tmp_entries, table->entries, (sizeof(Entry)) * table->capacity);
+
+    Table* new_table = ALLOCATE(Table, 1);
+    new_table->capacity = table->capacity;
+    new_table->count = table->count;
+    new_table->entries = tmp_entries;
+    return new_table;
+}
+
