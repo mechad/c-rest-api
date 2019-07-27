@@ -58,7 +58,12 @@ typedef struct {
         STRING_APPEND(str1, str2[_i])          \
     };
 
+// Free the char pointer
 #define STRING_FREE(str) FREE(char, (str)->chars)
+// Free the char pointer and the String pointer
+#define STRINGP_FREE(str)     \
+    FREE(char, (str)->chars); \
+    FREE(String, (str))
 
 #define STRING_INIT(str) \
     (str)->chars = NULL; \
@@ -68,6 +73,5 @@ typedef struct {
 
 String* copy_chars(const char* chars, int length);
 String* copy_string(const String* str);
-
 
 #endif

@@ -22,8 +22,23 @@ int main(int argc, char const* argv[])
     char t_json[] = "{\"name\": \"sample\", \"number\": {\"real\": \"1234567\"}}";
     STRING_APPEND_CSTRING(&value, t_json, 50);
 
+    JSONObject obj;
+    init_table(&obj);
+    parse_json(&value, &obj);
 
-    parse_json(&value, NULL);
+
+    String* target = json_get_string_c(&obj, "name");
+    printf("json funtion string: %s\n", target->chars);
+    JSONObject* t = json_get_object_c(&obj, "number");
+    if (t != NULL) {
+        printf("json funtion string in object: %d\n", t->count);
+        String* target2 = json_get_string_c(t, "real");
+        printf("json funtion string in object: %s\n", target2->chars);
+    } else {
+        printf("NO TABLE FOUND!\n");
+    }
+    free_json(&obj);
+    STRING_FREE(&value);
 
     // STRING_INIT(&key)
     // STRING_APPEND(&key, 'a')

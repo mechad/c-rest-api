@@ -29,6 +29,23 @@ typedef struct {
 
 static bool parse_object(JSONTokenArray* t_array, JSONObject* to);
 
+void free_json(JSONObject* obj)
+{
+    for (int i = 0; i < obj->capacity; i++) {
+        if (obj->entries[i].key != NULL || obj->entries[i].value.data != NULL) {
+            if (obj->entries[i].value.type == TYPE_OBJECT) {
+                free_json((JSONObject*)obj->entries[i].value.data);
+                // Table object pointers inside of json are allocated so
+                // we also need to free the allocated pointer
+                FREE(JSONObject, obj->entries[i].value.data);
+            } else if (obj->entries[i].value.type == TYPE_STRING) {
+                STRINGP_FREE((String*)obj->entries[i].value.data);
+            }
+        }
+    }
+    free_table(obj);
+}
+
 String* json_get_string(JSONObject* obj, String* kw)
 {
     DataValue tmp;
@@ -43,7 +60,9 @@ String* json_get_string(JSONObject* obj, String* kw)
 String* json_get_string_c(JSONObject* obj, const char* kw)
 {
     String* tmp = copy_chars(kw, (int)strlen(kw));
-    return json_get_string(obj, tmp);
+    String* val = json_get_string(obj, tmp);
+    STRINGP_FREE(tmp);
+    return val;
 }
 
 JSONObject* json_get_object(JSONObject* obj, String* kw)
@@ -60,7 +79,9 @@ JSONObject* json_get_object(JSONObject* obj, String* kw)
 JSONObject* json_get_object_c(JSONObject* obj, const char* kw)
 {
     String* tmp = copy_chars(kw, (int)strlen(kw));
-    return json_get_object(obj, tmp);
+    JSONObject* val = json_get_object(obj, tmp);
+    STRINGP_FREE(tmp);
+    return val;
 }
 
 static int is_white_space(char c)
@@ -89,9 +110,7 @@ static JSONValue json_string_value(JSONToken token)
 {
     JSONValue val;
     val.type = TYPE_STRING;
-    val.data = (void*)token.chars;
-    // val.data = malloc(sizeof(*token.chars));
-    // memcpy(val.data, token.chars, sizeof(*token.chars));
+    val.data = (void*)copy_string(token.chars);
     return val;
 }
 
@@ -100,6 +119,7 @@ static JSONValue json_object_value(JSONObject* obj)
     JSONValue val;
     val.type = TYPE_OBJECT;
     val.data = (void*)copy_table(obj);
+    free_table(obj);
     return val;
 }
 
@@ -235,39 +255,44 @@ static JSONToken tokenize(String* data, int* pos)
     return make_token(T_MALFORMED_JSON, NULL);
 }
 
-// TODO: return error if json is malformed
-void parse_json(String* data, JSONObject* json)
+static void create_tokens(String* data, JSONTokenArray* to)
 {
     int i = 0;
-    JSONTokenArray t_array;
-    t_array.capacity = 0;
-    t_array.len = 0;
-    t_array.pos = 0;
-    t_array.tokens = NULL;
+    to->capacity = 0;
+    to->len = 0;
+    to->pos = 0;
+    to->tokens = NULL;
     // String length contains the NULL and we dont need that
     while (i < data->len - 1) {
         JSONToken t = tokenize(data, &i);
-        if (t_array.capacity < t_array.len + 1) {
-            int _old_capacity = t_array.capacity;
-            t_array.capacity = GROW_CAPACITY(_old_capacity);
-            t_array.tokens = GROW_ARRAY(t_array.tokens, JSONToken, _old_capacity, t_array.capacity);
+        if (to->capacity < to->len + 1) {
+            int _old_capacity = to->capacity;
+            to->capacity = GROW_CAPACITY(_old_capacity);
+            to->tokens = GROW_ARRAY(to->tokens, JSONToken, _old_capacity, to->capacity);
         }
-        t_array.tokens[t_array.len] = t;
-        t_array.len++;
+        to->tokens[to->len] = t;
+        to->len++;
     }
-    JSONObject obj;
-    init_table(&obj);
-    if (!tokens_to_json(&t_array, &obj))
-        printf("ERROR: MALFORMED JSON!\n");
+}
 
-    String* target = json_get_string_c(&obj, "name");
-    printf("json funtion string: %s\n", target->chars);
-    JSONObject* t = json_get_object_c(&obj, "number");
-    if (t != NULL) {
-        printf("json funtion string in object: %d\n", t->count);
-        String* target2 = json_get_string_c(t, "real");
-        printf("json funtion string in object: %s\n", target2->chars);
-    } else {
-        printf("NO TABLE FOUND!\n");
+static void free_tokens(JSONTokenArray* tokens)
+{
+    for (int i = 0; i < tokens->len; i++) {
+        if (tokens->tokens[i].type == T_STRING) {
+            STRINGP_FREE((String*)tokens->tokens[i].chars);
+        }
     }
+    FREE_ARRAY(JSONToken, tokens->tokens, 0);
+}
+
+// TODO: return error if json is malformed
+bool parse_json(String* data, JSONObject* json)
+{
+    JSONTokenArray t_array;
+    create_tokens(data, &t_array);
+
+    bool result = tokens_to_json(&t_array, json);
+    free_tokens(&t_array);
+
+    return result;
 }

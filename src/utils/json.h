@@ -12,11 +12,12 @@ typedef DataValue JSONValue;
 typedef Table JSONObject;
 typedef String JSONString;
 
+void free_json(JSONObject* obj);
 String* json_get_string(JSONObject* obj, String* kw);
 String* json_get_string_c(JSONObject* obj, const char* kw);
 JSONObject* json_get_object(JSONObject* obj, String* kw);
 JSONObject* json_get_object_c(JSONObject* obj, const char* kw);
 
-void parse_json(String* data, JSONObject* json);
+bool parse_json(String* data, JSONObject* json);
 
 #endif

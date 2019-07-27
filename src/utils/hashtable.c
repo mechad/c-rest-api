@@ -181,6 +181,7 @@ String* table_find_string(Table* table, const char* chars, int length, uint32_t 
     }
 }
 
+//TODO: also tables inside of the entries
 Table* copy_table(const Table* table){
     Entry* tmp_entries = ALLOCATE(Entry, table->capacity);
     memcpy(tmp_entries, table->entries, (sizeof(Entry)) * table->capacity);
