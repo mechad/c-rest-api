@@ -1,9 +1,8 @@
 #include <string.h>
 
 #include "datatypes.h"
-#include "utils/memory.h"
 #include "utils/hashtable.h"
-//
+#include "utils/memory.h"
 
 static String* allocate_string(char* chars, int length, uint32_t hash)
 {
@@ -28,4 +27,23 @@ String* copy_chars(const char* chars, int length)
 String* copy_string(const String* str)
 {
     return copy_chars(str->chars, str->len);
+}
+
+void copy_data_value(DataValue* value)
+{
+    if (value == NULL)
+        return;
+    switch (value->type) {
+    case TYPE_STRING: {
+
+        value->data = (void*)copy_string((String*)value->data);
+    } break;
+
+    case TYPE_OBJECT:
+        value->data = (void*)copy_table((Table*)value->data);
+        break;
+
+    default:
+        break;
+    }
 }

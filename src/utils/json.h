@@ -18,6 +18,6 @@ String* json_get_string_c(JSONObject* obj, const char* kw);
 JSONObject* json_get_object(JSONObject* obj, String* kw);
 JSONObject* json_get_object_c(JSONObject* obj, const char* kw);
 
-bool parse_json(String* data, JSONObject* json);
+JSONObject* parse_json(String* data, bool* result_value);
 
 #endif

@@ -73,5 +73,6 @@ typedef struct {
 
 String* copy_chars(const char* chars, int length);
 String* copy_string(const String* str);
+void copy_data_value(DataValue* value);
 
 #endif

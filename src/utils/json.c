@@ -32,18 +32,20 @@ static bool parse_object(JSONTokenArray* t_array, JSONObject* to);
 void free_json(JSONObject* obj)
 {
     for (int i = 0; i < obj->capacity; i++) {
-        if (obj->entries[i].key != NULL || obj->entries[i].value.data != NULL) {
+        // FREE(String,obj->entries[i].value.data);
+        if (obj->entries[i].key != NULL) {
             if (obj->entries[i].value.type == TYPE_OBJECT) {
                 free_json((JSONObject*)obj->entries[i].value.data);
                 // Table object pointers inside of json are allocated so
                 // we also need to free the allocated pointer
-                FREE(JSONObject, obj->entries[i].value.data);
+                //FREE(JSONObject, obj->entries[i].value.data);
             } else if (obj->entries[i].value.type == TYPE_STRING) {
                 STRINGP_FREE((String*)obj->entries[i].value.data);
             }
         }
     }
     free_table(obj);
+    FREE(JSONObject, obj);
 }
 
 String* json_get_string(JSONObject* obj, String* kw)
@@ -51,7 +53,9 @@ String* json_get_string(JSONObject* obj, String* kw)
     DataValue tmp;
     if (table_get(obj, kw, &tmp)) {
         if (tmp.type == TYPE_STRING) {
-            return (String*)tmp.data;
+            //TODO: create copy of the data
+            String* value = copy_string((String*)tmp.data);
+            return value;
         }
     }
     return NULL;
@@ -70,7 +74,8 @@ JSONObject* json_get_object(JSONObject* obj, String* kw)
     DataValue tmp;
     if (table_get(obj, kw, &tmp)) {
         if (tmp.type == TYPE_OBJECT) {
-            return (JSONObject*)tmp.data;
+            //TODO: create copy
+            return copy_table((JSONObject*)tmp.data);
         }
     }
     return NULL;
@@ -119,7 +124,7 @@ static JSONValue json_object_value(JSONObject* obj)
     JSONValue val;
     val.type = TYPE_OBJECT;
     val.data = (void*)copy_table(obj);
-    free_table(obj);
+    free_json(obj);
     return val;
 }
 
@@ -146,10 +151,10 @@ static bool parse_keyword(JSONTokenArray* t_array, JSONObject* to)
         return table_set(to, keyword.chars, val);
     } break;
     case T_BRACE_OPEN: {
-        JSONObject obj;
-        init_table(&obj);
-        if (parse_object(t_array, &obj)) {
-            JSONValue val = json_object_value(&obj);
+        JSONObject* obj = ALLOCATE(JSONObject, 1);
+        init_table(obj);
+        if (parse_object(t_array, obj)) {
+            JSONValue val = json_object_value(obj);
             return table_set(to, keyword.chars, val);
         }
     } break;
@@ -286,13 +291,20 @@ static void free_tokens(JSONTokenArray* tokens)
 }
 
 // TODO: return error if json is malformed
-bool parse_json(String* data, JSONObject* json)
+JSONObject* parse_json(String* data, bool* result_value)
 {
+
+    JSONObject* json = ALLOCATE(JSONObject, 1);
+    init_table(json);
     JSONTokenArray t_array;
     create_tokens(data, &t_array);
 
     bool result = tokens_to_json(&t_array, json);
     free_tokens(&t_array);
 
-    return result;
+    if (result_value != NULL) {
+        *result_value = result;
+    }
+
+    return json;
 }

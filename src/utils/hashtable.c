@@ -182,9 +182,17 @@ String* table_find_string(Table* table, const char* chars, int length, uint32_t 
 }
 
 //TODO: also tables inside of the entries
-Table* copy_table(const Table* table){
+Table* copy_table(const Table* table)
+{
     Entry* tmp_entries = ALLOCATE(Entry, table->capacity);
     memcpy(tmp_entries, table->entries, (sizeof(Entry)) * table->capacity);
+
+    // Create copy of the data values
+    for (int i = 0; i < table->capacity; i++) {
+        if (tmp_entries[i].key != NULL) {
+            copy_data_value(&tmp_entries[i].value);
+        }
+    }
 
     Table* new_table = ALLOCATE(Table, 1);
     new_table->capacity = table->capacity;
@@ -192,4 +200,3 @@ Table* copy_table(const Table* table){
     new_table->entries = tmp_entries;
     return new_table;
 }
-
