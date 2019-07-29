@@ -5,13 +5,12 @@ START_TEST(simple_json_parse_t)
 {
     char json[] = "{\"name\": \"sample\"}";
     JSONString* jstring = copy_chars(json, 19);
-    JSONObject obj;
-    init_table(&obj);
-    bool succss = parse_json(jstring, &obj);
+    bool succss = false;
+    JSONObject* obj = parse_json(jstring, &succss);
     ck_assert_int_eq(succss, true);
-    JSONString* sample = json_get_string_c(&obj, "name");
+    JSONString* sample = json_get_string_c(obj, "name");
     ck_assert_str_eq(sample->chars, "sample");
-    free_json(&obj);
+    free_json(obj);
     STRINGP_FREE(sample);
     STRINGP_FREE(jstring);
 }
@@ -21,17 +20,16 @@ START_TEST(multiple_pair_json_parse_t)
 {
     char json[] = "{\"name\": \"sample\", \"number\": \"12345\", \"address\": \"Test Addr 1234\"}";
     JSONString* jstring = copy_chars(json, 67);
-    JSONObject obj;
-    init_table(&obj);
-    bool succss = parse_json(jstring, &obj);
+    bool succss = false;
+    JSONObject* obj = parse_json(jstring, &succss);
     ck_assert_int_eq(succss, true);
-    JSONString* sample = json_get_string_c(&obj, "name");
+    JSONString* sample = json_get_string_c(obj, "name");
     ck_assert_str_eq(sample->chars, "sample");
-    JSONString* number = json_get_string_c(&obj, "number");
+    JSONString* number = json_get_string_c(obj, "number");
     ck_assert_str_eq(number->chars, "12345");
-    JSONString* address = json_get_string_c(&obj, "address");
+    JSONString* address = json_get_string_c(obj, "address");
     ck_assert_str_eq(address->chars, "Test Addr 1234");
-    free_json(&obj);
+    free_json(obj);
     STRINGP_FREE(sample);
     STRINGP_FREE(number);
     STRINGP_FREE(address);
@@ -43,16 +41,15 @@ START_TEST(object_json_parse_t)
 {
     char json[] = "{\"name\": \"sample\", \"number\": {\"real\": \"1234567\"}}";
     JSONString* jstring = copy_chars(json, 67);
-    JSONObject obj;
-    init_table(&obj);
-    bool succss = parse_json(jstring, &obj);
+    bool succss = false;
+    JSONObject* obj = parse_json(jstring, &succss);
     ck_assert_int_eq(succss, true);
-    JSONString* sample = json_get_string_c(&obj, "name");
+    JSONString* sample = json_get_string_c(obj, "name");
     ck_assert_str_eq(sample->chars, "sample");
-    JSONObject* number = json_get_object_c(&obj, "number");
+    JSONObject* number = json_get_object_c(obj, "number");
     JSONString* real = json_get_string_c(number, "real");
     ck_assert_str_eq(real->chars, "1234567");
-    free_json(&obj);
+    free_json(obj);
     free_json(number);
     STRINGP_FREE(sample);
     STRINGP_FREE(real);
@@ -64,19 +61,18 @@ START_TEST(multiple_object_json_parse_t)
 {
     char json[] = "{\"name\": \"sample\", \"number\": {\"real\": \"1234567\"}, \"addr\": {\"actual\": \"Test Addr 1234\"}}";
     JSONString* jstring = copy_chars(json, 67);
-    JSONObject obj;
-    init_table(&obj);
-    bool succss = parse_json(jstring, &obj);
+    bool succss = false;
+    JSONObject* obj = parse_json(jstring, &succss);
     ck_assert_int_eq(succss, true);
-    JSONString* sample = json_get_string_c(&obj, "name");
+    JSONString* sample = json_get_string_c(obj, "name");
     ck_assert_str_eq(sample->chars, "sample");
-    JSONObject* number = json_get_object_c(&obj, "number");
+    JSONObject* number = json_get_object_c(obj, "number");
     JSONString* real = json_get_string_c(number, "real");
     ck_assert_str_eq(real->chars, "1234567");
-    JSONObject* addr = json_get_object_c(&obj, "addr");
+    JSONObject* addr = json_get_object_c(obj, "addr");
     JSONString* actual = json_get_string_c(addr, "actual");
     ck_assert_str_eq(actual->chars, "Test Addr 1234");
-    free_json(&obj);
+    free_json(obj);
     free_json(number);
     free_json(addr);
     STRINGP_FREE(sample);
@@ -90,19 +86,18 @@ START_TEST(nested_object_json_parse_t)
 {
     char json[] = "{\"name\": \"sample\", \"number\": {\"real\": \"1234567\", \"addr\": {\"actual\": \"Test Addr 1234\"}}}";
     JSONString* jstring = copy_chars(json, 67);
-    JSONObject obj;
-    init_table(&obj);
-    bool succss = parse_json(jstring, &obj);
+    bool succss = false;
+    JSONObject* obj = parse_json(jstring, &succss);
     ck_assert_int_eq(succss, true);
-    JSONString* sample = json_get_string_c(&obj, "name");
+    JSONString* sample = json_get_string_c(obj, "name");
     ck_assert_str_eq(sample->chars, "sample");
-    JSONObject* number = json_get_object_c(&obj, "number");
+    JSONObject* number = json_get_object_c(obj, "number");
     JSONString* real = json_get_string_c(number, "real");
     ck_assert_str_eq(real->chars, "1234567");
     JSONObject* addr = json_get_object_c(number, "addr");
     JSONString* actual = json_get_string_c(addr, "actual");
     ck_assert_str_eq(actual->chars, "Test Addr 1234");
-    free_json(&obj);
+    free_json(obj);
     free_json(number);
     free_json(addr);
     STRINGP_FREE(sample);
@@ -116,11 +111,10 @@ START_TEST(simple_json_parse_fail_t)
 {
     char json[] = "{\"name\", \"sample\"}";
     JSONString* jstring = copy_chars(json, 19);
-    JSONObject obj;
-    init_table(&obj);
-    bool succss = parse_json(jstring, &obj);
+    bool succss = false;
+    JSONObject* obj = parse_json(jstring, &succss);
     ck_assert_int_eq(succss, false);
-    free_json(&obj);
+    free_json(obj);
 }
 END_TEST
 
