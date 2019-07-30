@@ -32,13 +32,11 @@ static bool parse_object(JSONTokenArray* t_array, JSONObject* to);
 void free_json(JSONObject* obj)
 {
     for (int i = 0; i < obj->capacity; i++) {
-        // FREE(String,obj->entries[i].value.data);
         if (obj->entries[i].key != NULL) {
             if (obj->entries[i].value.type == TYPE_OBJECT) {
                 free_json((JSONObject*)obj->entries[i].value.data);
                 // Table object pointers inside of json are allocated so
                 // we also need to free the allocated pointer
-                //FREE(JSONObject, obj->entries[i].value.data);
             } else if (obj->entries[i].value.type == TYPE_STRING) {
                 STRINGP_FREE((String*)obj->entries[i].value.data);
             }
@@ -53,7 +51,6 @@ String* json_get_string(JSONObject* obj, String* kw)
     DataValue tmp;
     if (table_get(obj, kw, &tmp)) {
         if (tmp.type == TYPE_STRING) {
-            //TODO: create copy of the data
             String* value = copy_string((String*)tmp.data);
             return value;
         }
@@ -74,7 +71,6 @@ JSONObject* json_get_object(JSONObject* obj, String* kw)
     DataValue tmp;
     if (table_get(obj, kw, &tmp)) {
         if (tmp.type == TYPE_OBJECT) {
-            //TODO: create copy
             return copy_table((JSONObject*)tmp.data);
         }
     }
@@ -115,6 +111,7 @@ static JSONValue json_string_value(JSONToken token)
 {
     JSONValue val;
     val.type = TYPE_STRING;
+    //TODO: figure out how to not copy the string here for optimizing code
     val.data = (void*)copy_string(token.chars);
     return val;
 }
@@ -123,8 +120,7 @@ static JSONValue json_object_value(JSONObject* obj)
 {
     JSONValue val;
     val.type = TYPE_OBJECT;
-    val.data = (void*)copy_table(obj);
-    free_json(obj);
+    val.data = (void*)obj;
     return val;
 }
 
@@ -290,7 +286,6 @@ static void free_tokens(JSONTokenArray* tokens)
     FREE_ARRAY(JSONToken, tokens->tokens, 0);
 }
 
-// TODO: return error if json is malformed
 JSONObject* parse_json(String* data, bool* result_value)
 {
 
