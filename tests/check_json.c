@@ -60,7 +60,7 @@ END_TEST
 START_TEST(multiple_object_json_parse_t)
 {
     char json[] = "{\"name\": \"sample\", \"number\": {\"real\": \"1234567\"}, \"addr\": {\"actual\": \"Test Addr 1234\"}}";
-    JSONString* jstring = copy_chars(json, 67);
+    JSONString* jstring = copy_chars(json, 88);
     bool succss = false;
     JSONObject* obj = parse_json(jstring, &succss);
     ck_assert_int_eq(succss, true);
@@ -85,7 +85,7 @@ END_TEST
 START_TEST(nested_object_json_parse_t)
 {
     char json[] = "{\"name\": \"sample\", \"number\": {\"real\": \"1234567\", \"addr\": {\"actual\": \"Test Addr 1234\"}}}";
-    JSONString* jstring = copy_chars(json, 67);
+    JSONString* jstring = copy_chars(json, 88);
     bool succss = false;
     JSONObject* obj = parse_json(jstring, &succss);
     ck_assert_int_eq(succss, true);
