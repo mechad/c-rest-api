@@ -73,9 +73,20 @@
 #include "http.h"
 #include "server.h"
 
+RestServer __rs;
+
+static DataValue create_api_data(RestCallback cb)
+{
+    DataValue val;
+    val.type = TYPE_API_FUNCTION;
+    val.data = (void*)cb;
+    return val;
+}
+
 void init_server(RestServer* rss)
 {
     rss->clients = NULL;
+    init_table(&rss->urls);
 }
 
 void free_server(RestServer* rss)
@@ -85,9 +96,25 @@ void free_server(RestServer* rss)
     }
 }
 
-int run_server(RestServer* rss)
+RestCallback get_call_back(RestServer* rs, String* endpoint)
 {
+    DataValue val;
+    if (table_get(&rs->urls, endpoint, &val)) {
+        return (RestCallback)val.data;
+    }
 
+    return NULL;
+}
+
+void add_url(RestServer* rs, char* endpoint, RestCallback cb)
+{
+    String* tmp = copy_chars(endpoint, strlen(endpoint));
+    table_set(&rs->urls, tmp, create_api_data(cb));
+}
+
+int run_server(RestServer* rs)
+{
+    __rs = *rs;
     // Ports range is 0-65535 (0x0000-0xffff)
     // which is exacly what uint16_t holds
     uint16_t port = 8888;

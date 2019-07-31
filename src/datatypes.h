@@ -11,7 +11,10 @@ typedef enum {
     TYPE_ARRAY,
     TYPE_OBJECT,
     TYPE_BOOL,
-    TYPE_NULL
+    TYPE_NULL,
+
+    // Rest api
+    TYPE_API_FUNCTION
 } DataType;
 
 typedef struct {

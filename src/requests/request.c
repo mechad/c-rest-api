@@ -161,7 +161,7 @@ static void parse_uri(Request* r, String* line)
         STRING_APPEND(&r->uri, line->chars[i]);
     }
 
-    STRING_APPEND(&r->uri, '\0');
+    //STRING_APPEND(&r->uri, '\0');
 }
 
 void free_request(Request* r)

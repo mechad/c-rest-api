@@ -60,6 +60,7 @@
 // #include "crypto/sha1.h"
 // #include "dataframe.h"
 #include "requests/request.h"
+#include "server.h"
 #include "socketcon.h"
 
 #define SERVER_STR "Server: webasmhttpd/0.0.1\r\n"
@@ -93,6 +94,10 @@ void* accept_client(void* clientptr)
     Request r;
     init_request(&r);
     parse_request(&r, &conn);
+    RestCallback cb = get_call_back(&__rs, &r.uri);
+    if (cb != NULL)
+        (cb)("hello");
+    //TODO: serve static file
     header_404(&conn);
     printf("request handled\n");
     close(conn.conn_fd);
