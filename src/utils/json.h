@@ -19,5 +19,6 @@ JSONObject* json_get_object(JSONObject* obj, String* kw);
 JSONObject* json_get_object_c(JSONObject* obj, const char* kw);
 
 JSONObject* parse_json(String* data, bool* result_value);
+JSONString* json_to_string(JSONObject* obj);
 
 #endif

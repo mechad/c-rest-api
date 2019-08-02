@@ -278,12 +278,65 @@ static void create_tokens(String* data, JSONTokenArray* to)
 
 static void free_tokens(JSONTokenArray* tokens)
 {
-    for (int i = 0; i < tokens->len; i++) {
-        if (tokens->tokens[i].type == T_STRING) {
-            STRINGP_FREE((String*)tokens->tokens[i].chars);
+    // TODO: Fix the memory leak.
+    // Copy the chars from the token when creating the keyword to table
+    // And then you can free the tokens here. just uncomment things from below
+    // and also remember to free the keywords in free_json
+
+    // for (int i = 0; i < tokens->len; i++) {
+    //     if (tokens->tokens[i].type == T_STRING) {
+    //         STRINGP_FREE((String*)tokens->tokens[i].chars);
+    //     }
+    // }
+    // FREE_ARRAY(JSONToken, tokens->tokens, 0);
+}
+
+static void json_kw_to_string(String* from, String* to){
+    STRING_APPEND(to, '"');
+    STRING_APPEND_STRING(to, from);
+    STRING_APPEND(to, '"');
+    STRING_APPEND(to, ':');
+}
+
+static void json_str_to_string(String* from, JSONString* to)
+{
+    STRING_APPEND(to, '"');
+    STRING_APPEND_STRING(to, from);
+    STRING_APPEND(to, '"');
+}
+
+static void json_obj_to_string(JSONObject* obj, JSONString* to)
+{
+    int entries = 0;
+    STRING_APPEND(to, '{');
+    for (int i = 0; i < obj->capacity; i++) {
+        if (obj->entries[i].key == NULL)
+            continue;
+        json_kw_to_string(obj->entries[i].key, to);
+
+        switch (obj->entries[i].value.type) {
+        case TYPE_STRING:
+            json_str_to_string((String*)obj->entries[i].value.data, to);
+            break;
+        case TYPE_OBJECT:
+            json_obj_to_string((JSONObject*)obj->entries[i].value.data, to);
+            break;
+        default:
+            break;
         }
+        // Add , char after every entry except the last one
+        entries++;
+        if (entries < obj->count)
+            STRING_APPEND(to, ',');
     }
-    FREE_ARRAY(JSONToken, tokens->tokens, 0);
+    STRING_APPEND(to, '}');
+}
+
+JSONString* json_to_string(JSONObject* obj)
+{
+    JSONString* str = ALLOCATE(String, 1);
+    json_obj_to_string(obj, str);
+    return str;
 }
 
 JSONObject* parse_json(String* data, bool* result_value)
