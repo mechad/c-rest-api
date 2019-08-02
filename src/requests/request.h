@@ -3,6 +3,7 @@
 
 #include "../datatypes.h"
 #include "../socketcon.h"
+#include "../utils/json.h"
 
 typedef enum {
     GET = 1,
@@ -15,6 +16,7 @@ typedef struct {
     RequestType type;
     String uri;
     String content;
+    JSONObject params;
 } Request;
 
 void parse_request(Request* r, Connection* conn);

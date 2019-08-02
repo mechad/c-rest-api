@@ -94,9 +94,11 @@ void* accept_client(void* clientptr)
     Request r;
     init_request(&r);
     parse_request(&r, &conn);
-    RestCallback cb = get_call_back(&__rs, &r.uri);
-    if (cb != NULL)
-        (cb)("hello");
+    ApiUrl* au = get_call_back(&__rs, &r.uri);
+    if (au != NULL){
+        parse_paramas(&r, au);
+        (au->callback)(&r);
+    }
     //TODO: serve static file
     header_404(&conn);
     printf("request handled\n");
