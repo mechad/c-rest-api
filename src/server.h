@@ -4,7 +4,7 @@
 #include "utils/hashtable.h"
 #include "requests/request.h"
 
-typedef void (*RestCallback)(Request* test);
+typedef void (*RestCallback)(Response* resp, Request* test);
 
 //TODO: own tables for each request type POST GET PUT etc.
 typedef struct {

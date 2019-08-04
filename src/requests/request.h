@@ -16,8 +16,14 @@ typedef struct {
     RequestType type;
     String uri;
     String content;
-    JSONObject params;
+    JSONObject* params;
 } Request;
+
+// Struct used for callback functions
+typedef struct
+{
+    Connection conn;
+} Response;
 
 void parse_request(Request* r, Connection* conn);
 void init_request(Request* r);

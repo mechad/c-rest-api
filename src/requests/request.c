@@ -168,12 +168,14 @@ void free_request(Request* r)
 {
     STRING_FREE(&r->content);
     STRING_FREE(&r->uri);
+    free_json(r->params);
 }
 
 void init_request(Request* r)
 {
     // Type is -1 by default to indicate possible error
     r->type = -1;
+    r->params = NULL;
     STRING_INIT(&r->uri);
     STRING_INIT(&r->content);
 }

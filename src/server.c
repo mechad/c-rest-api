@@ -187,9 +187,10 @@ void parse_paramas(Request* r, ApiUrl* au)
 {
     if (au->kw_len == 0)
         return;
-    int pos = r->uri.len;
+    int pos = r->uri.len - 1;
     int i, j, len;
-    init_table(&r->params);
+    r->params = ALLOCATE(JSONObject, 1);
+    init_table(r->params);
     for (i = au->kw_len - 1; i >= 0; i--) {
         len = 0;
         for (j = pos; j >= 0; j--) {
@@ -201,7 +202,7 @@ void parse_paramas(Request* r, ApiUrl* au)
         DataValue val;
         val.type = TYPE_STRING;
         val.data = (void*)copy_chars(r->uri.chars + j + 1, len);
-        table_set(&r->params, au->keywords[i], val);
+        table_set(r->params, au->keywords[i], val);
         pos = j - 1;
     }
 }
