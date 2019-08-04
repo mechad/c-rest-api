@@ -190,6 +190,7 @@ Table* copy_table(const Table* table)
     // Create copy of the data values
     for (int i = 0; i < table->capacity; i++) {
         if (tmp_entries[i].key != NULL) {
+            tmp_entries[i].key = copy_string(tmp_entries[i].key);
             copy_data_value(&tmp_entries[i].value);
         }
     }
