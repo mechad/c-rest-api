@@ -46,6 +46,9 @@ typedef struct {
             int _old_capacity = (str)->capacity;                                           \
             (str)->capacity = GROW_CAPACITY(_old_capacity);                                \
             (str)->chars = GROW_ARRAY((str)->chars, char, _old_capacity, (str)->capacity); \
+            for (int _i = _old_capacity; _i < (str)->capacity; _i++) {                     \
+                (str)->chars[_i] = '\0';                                                   \
+            }                                                                              \
         }                                                                                  \
         (str)->chars[(str)->len] = c;                                                      \
         (str)->len++;                                                                      \

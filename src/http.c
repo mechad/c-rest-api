@@ -102,7 +102,7 @@ void http_200(Response* r)
 
 void send_json(Response* r, JSONObject* obj)
 {
-     char buf[256];
+    char buf[256];
 
     strcpy(buf, "HTTP/1.0 200 OK\r\n");
     send(r->conn.conn_fd, buf, strlen(buf), 0);

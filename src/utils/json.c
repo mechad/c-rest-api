@@ -33,6 +33,7 @@ void free_json(JSONObject* obj)
 {
     for (int i = 0; i < obj->capacity; i++) {
         if (obj->entries[i].key != NULL) {
+            STRINGP_FREE(obj->entries[i].key);
             if (obj->entries[i].value.type == TYPE_OBJECT) {
                 free_json((JSONObject*)obj->entries[i].value.data);
                 // Table object pointers inside of json are allocated so
@@ -144,14 +145,16 @@ static bool parse_keyword(JSONTokenArray* t_array, JSONObject* to)
     switch (token.type) {
     case T_STRING: {
         JSONValue val = json_string_value(token);
-        return table_set(to, keyword.chars, val);
+        // Create copy of the keyword chars to table so we can safely free all the tokens
+        return table_set(to, copy_string(keyword.chars), val);
     } break;
     case T_BRACE_OPEN: {
         JSONObject* obj = ALLOCATE(JSONObject, 1);
         init_table(obj);
         if (parse_object(t_array, obj)) {
             JSONValue val = json_object_value(obj);
-            return table_set(to, keyword.chars, val);
+            // Create copy of the keyword chars to table so we can safely free all the tokens
+            return table_set(to, copy_string(keyword.chars), val);
         }
     } break;
     default:
@@ -278,20 +281,16 @@ static void create_tokens(String* data, JSONTokenArray* to)
 
 static void free_tokens(JSONTokenArray* tokens)
 {
-    // TODO: Fix the memory leak.
-    // Copy the chars from the token when creating the keyword to table
-    // And then you can free the tokens here. just uncomment things from below
-    // and also remember to free the keywords in free_json
-
-    // for (int i = 0; i < tokens->len; i++) {
-    //     if (tokens->tokens[i].type == T_STRING) {
-    //         STRINGP_FREE((String*)tokens->tokens[i].chars);
-    //     }
-    // }
-    // FREE_ARRAY(JSONToken, tokens->tokens, 0);
+    for (int i = 0; i < tokens->len; i++) {
+        if (tokens->tokens[i].type == T_STRING) {
+            STRINGP_FREE((String*)tokens->tokens[i].chars);
+        }
+    }
+    FREE_ARRAY(JSONToken, tokens->tokens, 0);
 }
 
-static void json_kw_to_string(String* from, String* to){
+static void json_kw_to_string(String* from, String* to)
+{
     STRING_APPEND(to, '"');
     STRING_APPEND_STRING(to, from);
     STRING_APPEND(to, '"');
@@ -335,6 +334,7 @@ static void json_obj_to_string(JSONObject* obj, JSONString* to)
 JSONString* json_to_string(JSONObject* obj)
 {
     JSONString* str = ALLOCATE(String, 1);
+    STRING_INIT(str);
     json_obj_to_string(obj, str);
     return str;
 }
