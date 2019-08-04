@@ -168,7 +168,8 @@ void free_request(Request* r)
 {
     STRING_FREE(&r->content);
     STRING_FREE(&r->uri);
-    free_json(r->params);
+    if (r->params != NULL)
+        free_json(r->params);
 }
 
 void init_request(Request* r)

@@ -71,10 +71,25 @@
 #include <pthread.h>
 
 #include "http.h"
-#include "server.h"
 #include "requests/request.h"
+#include "server.h"
 
 RestServer __rs;
+
+typedef struct
+{
+    ApiUrl* urls;
+    int urls_len;
+    JSONObject* suburls;
+} ApiTable;
+
+static void init_apitable(ApiTable* at)
+{
+    at->urls = NULL;
+    at->urls_len = 0;
+    at->suburls = ALLOCATE(JSONObject, 1);
+    init_table(at->suburls);
+}
 
 static String** parse_keywords(char* endpoint, int* length)
 {
@@ -202,32 +217,137 @@ void parse_paramas(Request* r, ApiUrl* au)
         DataValue val;
         val.type = TYPE_STRING;
         val.data = (void*)copy_chars(r->uri.chars + j + 1, len);
-        table_set(r->params, au->keywords[i], val);
+        table_set(r->params, copy_string(au->keywords[i]), val);
         pos = j - 1;
     }
 }
 
+static String** split_url(char* endpoint, int* amount)
+{
+    String** val = NULL;
+    int pos = 0;
+    int len = 1;
+    int endpoint_len = (int)strlen(endpoint);
+    for (int i = 1; i < endpoint_len; i++) {
+        if (endpoint[i] == '/') {
+            String* tmp = copy_chars(endpoint + pos, len);
+            pos = len + pos;
+            len = 0;
+            val = GROW_ARRAY(val, String*, 0, *amount + 1);
+            val[*amount] = tmp;
+            *amount += 1;
+            if (endpoint[i + 1] == ':')
+                return val;
+        }
+        len++;
+    }
+    String* tmp = copy_chars(endpoint + pos, len);
+    val = GROW_ARRAY(val, String*, 0, *amount + 1);
+    val[*amount] = tmp;
+    *amount += 1;
+
+    return val;
+}
+
 ApiUrl* get_call_back(RestServer* rs, String* url)
 {
-    String* endpoint = get_endpoint_url(rs, url);
-    if (endpoint == NULL)
-        return NULL;
-
+    int len = 0;
+    String** splits = split_url(url->chars, &len);
+    Table* tmp_table = &rs->urls;
+    ApiUrl* return_url = NULL;
     DataValue val;
-    if (table_get(&rs->urls, endpoint, &val)) {
-        return (ApiUrl*)val.data;
+    bool found = table_get(tmp_table, splits[0], &val);
+    if (!found || val.data == NULL)
+        goto end;
+    ApiTable* at = (ApiTable*)val.data;
+    for (int i = 0; i < len; i++) {
+        if (i == len - 1) {
+            if (at->urls[0].kw_len == 0)
+                return_url = &at->urls[0];
+        } else {
+            if (at->suburls != NULL && at->suburls->count != 0) {
+                // Test if there is a table for following keyword
+                bool found = table_get(at->suburls, splits[i + 1], &val);
+                if (found && val.data != NULL) {
+                    at = (ApiTable*)val.data;
+                    tmp_table = at->suburls;
+                    continue;
+                }
+                // else try to find the callback apiurl
+                for (int j = 0; j < at->urls_len; j++) {
+                    if (at->urls[j].kw_len == (len - (i + 1))) {
+                        return_url = &at->urls[j];
+                    }
+                }
+                goto end;
+            } else {
+                for (int j = 0; j < at->urls_len; j++) {
+                    if (at->urls[j].kw_len == (len - (i + 1))) {
+                        return_url = &at->urls[j];
+                    }
+                }
+                goto end;
+            }
+        }
     }
 
-    return NULL;
+end:
+    for (int i = 0; i < len; i++) {
+        STRINGP_FREE(splits[i]);
+    }
+    free(splits);
+    return return_url;
 }
 
 void add_url(RestServer* rs, char* endpoint, RestCallback cb)
 {
-    String* tmp = endpoint_key(endpoint, strlen(endpoint));
-    rs->endpoints = GROW_ARRAY(rs->endpoints, String*, 0, rs->endpoint_len + 1);
-    rs->endpoints[rs->endpoint_len] = tmp;
-    rs->endpoint_len++;
-    table_set(&rs->urls, tmp, create_api_data(endpoint, cb));
+    //TODO: throw an error and close program if endpoint doesn't start with /
+    //TODO: throw an error if the endpoint already exists;
+
+    int len = 0;
+    String** splits = split_url(endpoint, &len);
+    Table* tmp_table = &rs->urls;
+    for (int i = 0; i < len; i++) {
+        if (i == len - 1) {
+            DataValue val;
+            bool found = table_get(tmp_table, splits[i], &val);
+            if (!found || val.data == NULL) {
+                ApiTable* at = ALLOCATE(ApiTable, 1);
+                init_apitable(at);
+                at->urls = ALLOCATE(ApiUrl, 1);
+                at->urls->kw_len = 0;
+                at->urls->keywords = parse_keywords(endpoint, &at->urls->kw_len);
+                at->urls->callback = cb;
+                at->urls_len++;
+                DataValue d_val;
+                d_val.type = TYPE_API_FUNCTION;
+                d_val.data = (void*)at;
+                table_set(tmp_table, splits[i], d_val);
+            } else {
+                ApiTable* at = (ApiTable*)val.data;
+                at->urls = GROW_ARRAY(at->urls, ApiUrl, 0, at->urls_len + 1);
+                at->urls[at->urls_len].kw_len = 0;
+                at->urls[at->urls_len].keywords = parse_keywords(endpoint, &at->urls[at->urls_len].kw_len);
+                at->urls[at->urls_len].callback = cb;
+                at->urls_len++;
+            }
+            //table_set(tmp_table, splits[i], create_api_data(endpoint, cb));
+        } else {
+            DataValue val;
+            bool found = table_get(tmp_table, splits[i], &val);
+            if (!found || val.data == NULL) {
+                ApiTable* at = ALLOCATE(ApiTable, 1);
+                init_apitable(at);
+                DataValue d_val;
+                d_val.type = TYPE_API_FUNCTION;
+                d_val.data = (void*)at;
+                table_set(tmp_table, splits[i], d_val);
+                tmp_table = at->suburls;
+            } else {
+                tmp_table = ((ApiTable*)val.data)->suburls;
+            }
+        }
+    }
 }
 
 int run_server(RestServer* rs)
