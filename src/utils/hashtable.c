@@ -39,10 +39,9 @@ static Entry* find_entry(Entry* entries, int capacity, String* key)
     //Entry* tombstone = NULL;
     for (;;) {
         Entry* entry = &entries[index];
-        return entry;
-        // if (entry->key == key || entry->key == NULL) {
-        //     return entry;
-        // }
+        if (entry->key == NULL || strcmp(entry->key->chars, key->chars) == 0) {
+            return entry;
+        }
 
         // if (entry->key == NULL) {
         //     if (IS_NULL(entry->value)) {
@@ -58,7 +57,7 @@ static Entry* find_entry(Entry* entries, int capacity, String* key)
         //     return entry;
         // }
 
-        // index = (index + 1) & capacity;
+        index = (index + 1) % capacity;
     }
 }
 
