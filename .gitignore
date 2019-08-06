@@ -3,3 +3,4 @@ build/
 *.o
 server
 /check_*
+/i_*
