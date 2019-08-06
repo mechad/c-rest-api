@@ -266,8 +266,7 @@ static void create_tokens(String* data, JSONTokenArray* to)
     to->len = 0;
     to->pos = 0;
     to->tokens = NULL;
-    // String length contains the NULL and we dont need that
-    while (i < data->len - 1) {
+    while (i < data->len && data->chars[i] != '\0') {
         JSONToken t = tokenize(data, &i);
         if (to->capacity < to->len + 1) {
             int _old_capacity = to->capacity;
