@@ -30,8 +30,25 @@ typedef struct {
 #define AS_STRING(value) ((String*)(value).data)
 #define AS_CSTRING(value) (((String*)(value).data)->chars)
 
-#define BOOL_VAL(value) ((DataValue){ TYPE_BOOL, (bool*)value })
-#define NULL_VAL ((DataValue){ TYPE_BOOL, NULL })
+#define BOOL_VAL(value) ((DataValue){ TYPE_BOOL, (void*)value })
+#define NULL_VAL ((DataValue){ TYPE_NULL, NULL })
+#define NUMBER_VAL(value) ((DataValue){ TYPE_NUMBER, &(float){strtof(value, NULL)}})
+
+typedef struct
+{
+    bool value;
+} Boolean;
+
+typedef struct
+{
+    void* value;
+} Null;
+
+typedef struct
+{
+    float value;
+} Number;
+
 
 typedef struct {
     char* chars;

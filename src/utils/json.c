@@ -12,7 +12,12 @@ typedef enum {
     T_COMMA,
     T_COLON,
     T_MINUS,
-    T_STRING
+    T_STRING,
+    T_ARRAY,
+    T_FALSE,
+    T_TRUE,
+    T_NULL,
+    T_NUMBER,
 } JTokenType;
 
 typedef struct {
@@ -86,9 +91,52 @@ JSONObject* json_get_object_c(JSONObject* obj, const char* kw)
     return val;
 }
 
+JSONBool* json_get_bool(JSONObject* obj, String* kw)
+{
+    DataValue tmp;
+    if (table_get(obj, kw, &tmp)) {
+        if (tmp.type == TYPE_BOOL) {
+            return (JSONBool*)tmp.data;
+        }
+    }
+    return NULL;
+}
+
+JSONBool* json_get_bool_c(JSONObject* obj, const char* kw)
+{
+    String* tmp = copy_chars(kw, (int)strlen(kw));
+    JSONBool* val = json_get_bool(obj, tmp);
+    STRINGP_FREE(tmp);
+    return val;
+}
+
+JSONNumber* json_get_number(JSONObject* obj, String* kw)
+{
+    DataValue tmp;
+    if (table_get(obj, kw, &tmp)) {
+        if (tmp.type == TYPE_NUMBER) {
+            return (JSONNumber*)tmp.data;
+        }
+    }
+    return NULL;
+}
+
+JSONNumber* json_get_number_c(JSONObject* obj, const char* kw)
+{
+    String* tmp = copy_chars(kw, (int)strlen(kw));
+    JSONNumber* val = json_get_number(obj, tmp);
+    STRINGP_FREE(tmp);
+    return val;
+}
+
 static int is_white_space(char c)
 {
     return (c == ' ' || c == '\n' || c == '\r');
+}
+
+static int is_number(char c)
+{
+    return (c >= '0' && c <= '9');
 }
 
 static JSONToken peak_token(JSONTokenArray* t_arr)
@@ -125,6 +173,34 @@ static JSONValue json_object_value(JSONObject* obj)
     return val;
 }
 
+static JSONValue json_boolean_value(bool b)
+{
+    JSONValue val;
+    bool* tmp = ALLOCATE(bool, 1);
+    *tmp = b;
+    val.type = TYPE_BOOL;
+    val.data = (void*)tmp;
+    return val;
+}
+
+static JSONValue json_null_value()
+{
+    JSONValue val;
+    val.type = TYPE_NULL;
+    val.data = NULL;
+    return val;
+}
+
+static JSONValue json_number_value(JSONToken token)
+{
+    JSONValue val;
+    float* d = ALLOCATE(float, 1);
+    *d = strtof(token.chars->chars, NULL);
+    val.type = TYPE_NUMBER;
+    val.data = (void*)d;
+    return val;
+}
+
 static void token_to_keyword(JSONToken* token)
 {
     token->chars->hash = hash_string(token->chars->chars, token->chars->len);
@@ -157,6 +233,15 @@ static bool parse_keyword(JSONTokenArray* t_array, JSONObject* to)
             return table_set(to, copy_string(keyword.chars), val);
         }
     } break;
+    case T_NUMBER:
+        return table_set(to, copy_string(keyword.chars), json_number_value(token));
+    case T_FALSE:
+        //return table_set(to, copy_string(keyword.chars), BOOL_VAL(false));
+        return table_set(to, copy_string(keyword.chars), json_boolean_value(false));
+    case T_TRUE:
+        return table_set(to, copy_string(keyword.chars), json_boolean_value(true));
+    case T_NULL:
+        return table_set(to, copy_string(keyword.chars), NULL_VAL);
     default:
         break;
     }
@@ -222,6 +307,18 @@ static JSONToken make_string_token(String* data, int* pos)
     return make_token(T_STRING, tmp);
 }
 
+static JSONToken make_number_token(String* data, int* pos)
+{
+    //TODO: parse . char
+    (*pos)--;
+    int len = 0;
+    for (; is_number(data->chars[(*pos)]); (*pos)++) {
+        len++;
+    }
+    String* tmp = copy_chars(data->chars + ((*pos) - len), len);
+    return make_token(T_NUMBER, tmp);
+}
+
 static JSONToken tokenize(String* data, int* pos)
 {
     char c;
@@ -253,8 +350,28 @@ static JSONToken tokenize(String* data, int* pos)
     case '"':
         return make_string_token(data, pos);
         break;
-    default:
+    case 'f':
+        if (strncmp(data->chars + *pos, "alse", 4) == 0) {
+            *pos += 4;
+            return make_token(T_FALSE, NULL);
+        }
         break;
+    case 't':
+        if (strncmp(data->chars + *pos, "rue", 3) == 0) {
+            *pos += 3;
+            return make_token(T_TRUE, NULL);
+        }
+        break;
+    case 'n':
+        if (strncmp(data->chars + *pos, "ull", 3) == 0) {
+            *pos += 3;
+            return make_token(T_NULL, NULL);
+        }
+        break;
+    default: {
+        if (is_number(c))
+            return make_number_token(data, pos);
+    }break;
     }
     return make_token(T_MALFORMED_JSON, NULL);
 }
@@ -324,7 +441,7 @@ static void json_obj_to_string(JSONObject* obj, JSONString* to)
         }
         // Add , char after every entry except the last one
         entries++;
-        if (entries < obj->count)
+        if (entries < obj->count - 2)
             STRING_APPEND(to, ',');
     }
     STRING_APPEND(to, '}');

@@ -12,11 +12,19 @@ typedef DataValue JSONValue;
 typedef Table JSONObject;
 typedef String JSONString;
 
+#define JSONNull NULL
+#define JSONNumber float
+#define JSONBool bool
+
 void free_json(JSONObject* obj);
 String* json_get_string(JSONObject* obj, String* kw);
 String* json_get_string_c(JSONObject* obj, const char* kw);
 JSONObject* json_get_object(JSONObject* obj, String* kw);
 JSONObject* json_get_object_c(JSONObject* obj, const char* kw);
+JSONBool* json_get_bool(JSONObject* obj, String* kw);
+JSONBool* json_get_bool_c(JSONObject* obj, const char* kw);
+JSONNumber* json_get_number(JSONObject* obj, String* kw);
+JSONNumber* json_get_number_c(JSONObject* obj, const char* kw);
 
 JSONObject* parse_json(String* data, bool* result_value);
 JSONString* json_to_string(JSONObject* obj);
