@@ -118,6 +118,23 @@ START_TEST(simple_json_parse_fail_t)
 }
 END_TEST
 
+START_TEST(simple_json_bool_and_number_t)
+{
+    char json[] = "{\"false\": false, \"true\": true, \"number\": 1234}";
+    JSONString* jstring = copy_chars(json, 47);
+    bool succss = true;
+    JSONObject* obj = parse_json(jstring, &succss);
+    ck_assert_int_eq(succss, true);
+    JSONBool* fal = json_get_bool_c(obj, "false");
+    ck_assert_int_eq(*fal, false);
+    JSONBool* tr = json_get_bool_c(obj, "true");
+    ck_assert_int_eq(*tr, true);
+    JSONNumber* nr = json_get_number_c(obj, "number");
+    ck_assert_int_eq((int)(*nr), 1234);
+    free_json(obj);
+}
+END_TEST
+
 Suite* json_suite()
 {
     Suite* s;
@@ -133,6 +150,7 @@ Suite* json_suite()
     tcase_add_test(tc_core, multiple_object_json_parse_t);
     tcase_add_test(tc_core, nested_object_json_parse_t);
     tcase_add_test(tc_core, simple_json_parse_fail_t);
+    tcase_add_test(tc_core, simple_json_bool_and_number_t);
     suite_add_tcase(s, tc_core);
 
     return s;
