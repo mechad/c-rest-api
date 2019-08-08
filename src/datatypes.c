@@ -47,3 +47,8 @@ void copy_data_value(DataValue* value)
         break;
     }
 }
+void init_array(Array* arr)
+{
+    arr->values = NULL;
+    arr->length = 0;
+}

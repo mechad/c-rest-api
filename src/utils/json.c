@@ -33,6 +33,7 @@ typedef struct {
 } JSONTokenArray;
 
 static bool parse_object(JSONTokenArray* t_array, JSONObject* to);
+static bool parse_array(JSONTokenArray* t_array, JSONArray* to);
 
 void free_json(JSONObject* obj)
 {
@@ -129,6 +130,25 @@ JSONNumber* json_get_number_c(JSONObject* obj, const char* kw)
     return val;
 }
 
+JSONArray* json_get_array(JSONObject* obj, String* kw)
+{
+    DataValue tmp;
+    if (table_get(obj, kw, &tmp)) {
+        if (tmp.type == TYPE_ARRAY) {
+            return (JSONArray*)tmp.data;
+        }
+    }
+    return NULL;
+}
+
+JSONArray* json_get_array_c(JSONObject* obj, const char* kw)
+{
+    String* tmp = copy_chars(kw, (int)strlen(kw));
+    JSONArray* val = json_get_array(obj, tmp);
+    STRINGP_FREE(tmp);
+    return val;
+}
+
 static int is_white_space(char c)
 {
     return (c == ' ' || c == '\n' || c == '\r');
@@ -201,6 +221,14 @@ static JSONValue json_number_value(JSONToken token)
     return val;
 }
 
+static JSONValue json_array_value(JSONArray* arr)
+{
+    JSONValue val;
+    val.type = TYPE_ARRAY;
+    val.data = (void*)arr;
+    return val;
+}
+
 static void token_to_keyword(JSONToken* token)
 {
     token->chars->hash = hash_string(token->chars->chars, token->chars->len);
@@ -233,6 +261,16 @@ static bool parse_keyword(JSONTokenArray* t_array, JSONObject* to)
             return table_set(to, copy_string(keyword.chars), val);
         }
     } break;
+    case T_SQUARE_OPEN:{
+        JSONArray* arr = ALLOCATE(JSONArray, 1);
+        init_array(arr);
+        if (parse_array(t_array, arr)) {
+            JSONValue val = json_array_value(arr);
+            // Create copy of the keyword chars to table so we can safely free all the tokens
+            return table_set(to, copy_string(keyword.chars), val);
+        }
+    } break;
+
     case T_NUMBER:
         return table_set(to, copy_string(keyword.chars), json_number_value(token));
     case T_FALSE:
@@ -265,6 +303,56 @@ static bool parse_object(JSONTokenArray* t_array, JSONObject* to)
             return false;
     }
     if (current_token(t_array).type != T_BRACE_CLOSE)
+        return false;
+
+    return true;
+}
+
+static bool parse_array(JSONTokenArray* t_array, JSONArray* to)
+{
+    // Empty array
+    if (peak_token(t_array).type == T_SQUARE_CLOSE){
+        advance_token(t_array);
+        return true;
+    }
+
+    do {
+        JSONToken current = advance_token(t_array);
+        JSONValue val;
+        switch (current.type) {
+        case T_STRING:
+            val = json_string_value(current);
+            break;
+        case T_BRACE_OPEN: {
+            JSONObject* obj = ALLOCATE(JSONObject, 1);
+            init_table(obj);
+            if (parse_object(t_array, obj))
+                val = json_object_value(obj);
+            else
+                return false;
+        } break;
+        case T_NUMBER:
+            val = json_number_value(current);
+            break;
+        case T_FALSE:
+            val = json_boolean_value(false);
+            break;
+        case T_TRUE:
+            val = json_boolean_value(true);
+            break;
+        case T_NULL:
+            val = json_null_value();
+            break;
+        default:
+            return false;
+        }
+
+        to->values = GROW_ARRAY(to->values, JSONValue, 0, to->length + 1);
+        to->values[to->length] = val;
+        to->length++;
+    } while (advance_token(t_array).type == T_COMMA);
+
+    if (current_token(t_array).type != T_SQUARE_CLOSE)
         return false;
 
     return true;
@@ -371,7 +459,7 @@ static JSONToken tokenize(String* data, int* pos)
     default: {
         if (is_number(c))
             return make_number_token(data, pos);
-    }break;
+    } break;
     }
     return make_token(T_MALFORMED_JSON, NULL);
 }

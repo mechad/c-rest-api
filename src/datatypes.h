@@ -26,13 +26,16 @@ typedef struct {
 #define IS_NULL(value) ((value).type == TYPE_NULL)
 #define IS_NUMBER(value) ((value).type == TYPE_NUMBER)
 #define IS_OBJ(value) ((value).type == TYPE_OBJECT)
+#define IS_ARRAY(value) ((value).type == TYPE_ARRAY)
+#define IS_STRING(value) ((value).type == TYPE_STRING)
 
+#define AS_VALUE(type, value) ((type*)(value).data)
 #define AS_STRING(value) ((String*)(value).data)
 #define AS_CSTRING(value) (((String*)(value).data)->chars)
 
 #define BOOL_VAL(value) ((DataValue){ TYPE_BOOL, (void*)value })
 #define NULL_VAL ((DataValue){ TYPE_NULL, NULL })
-#define NUMBER_VAL(value) ((DataValue){ TYPE_NUMBER, &(float){strtof(value, NULL)}})
+#define NUMBER_VAL(value) ((DataValue){ TYPE_NUMBER, &(float){ strtof(value, NULL) } })
 
 typedef struct
 {
@@ -49,13 +52,18 @@ typedef struct
     float value;
 } Number;
 
-
 typedef struct {
     char* chars;
     int len;
     int capacity;
     uint32_t hash; // for table reference
 } String;
+
+typedef struct
+{
+    DataValue* values;
+    int length;
+} Array;
 
 #define STRING_APPEND(str, c)                                                              \
     do {                                                                                   \
@@ -97,5 +105,6 @@ typedef struct {
 String* copy_chars(const char* chars, int length);
 String* copy_string(const String* str);
 void copy_data_value(DataValue* value);
+void init_array(Array* arr);
 
 #endif
