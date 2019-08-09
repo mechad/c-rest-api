@@ -135,6 +135,59 @@ START_TEST(simple_json_bool_and_number_t)
 }
 END_TEST
 
+START_TEST(json_kw_array_len0_t)
+{
+    char json[] = "{\"array\": []}";
+    JSONString* jstring = copy_chars(json, 14);
+    bool succss = true;
+    JSONObject* obj = parse_json(jstring, &succss);
+    ck_assert_int_eq(succss, true);
+    JSONArray* arr = json_get_array_c(obj, "array");
+    ck_assert_int_eq(arr->length, 0);
+    free_json(obj);
+}
+END_TEST
+
+START_TEST(json_kw_array_len1_t)
+{
+    char json[] = "{\"array\": [\"single\"]}";
+    JSONString* jstring = copy_chars(json, 22);
+    bool succss = true;
+    JSONObject* obj = parse_json(jstring, &succss);
+    ck_assert_int_eq(succss, true);
+    JSONArray* arr = json_get_array_c(obj, "array");
+    ck_assert_int_eq(arr->length, 1);
+    ck_assert_int_eq(IS_STRING(arr->values[0]), 1);
+    ck_assert_str_eq(AS_CSTRING(arr->values[0]), "single");
+    free_json(obj);
+}
+END_TEST
+
+START_TEST(json_kw_array_len5_t)
+{
+    char json[] = "{\"array\": [\"single\", 2, false, true, {\"obj\": 3}]}";
+    JSONString* jstring = copy_chars(json, 53);
+    bool succss = true;
+    JSONObject* obj = parse_json(jstring, &succss);
+    ck_assert_int_eq(succss, true);
+    JSONArray* arr = json_get_array_c(obj, "array");
+    ck_assert_int_eq(arr->length, 5);
+    ck_assert_int_eq(IS_STRING(arr->values[0]), 1);
+    ck_assert_int_eq(IS_NUMBER(arr->values[1]), 1);
+    ck_assert_int_eq(IS_BOOL(arr->values[2]), 1);
+    ck_assert_int_eq(IS_BOOL(arr->values[3]), 1);
+    ck_assert_int_eq(IS_OBJ(arr->values[4]), 1);
+    ck_assert_str_eq(AS_CSTRING(arr->values[0]), "single");
+    ck_assert_int_eq((int)*AS_NUMBER(arr->values[1]), 2);
+    ck_assert_int_eq(*AS_BOOL(arr->values[2]), 0);
+    ck_assert_int_eq(*AS_BOOL(arr->values[3]), 1);
+    JSONNumber* nr = json_get_number_c(AS_OBJ(arr->values[4]), "obj");
+    ck_assert_int_eq((int)(*nr), 3);
+
+    free_json(obj);
+}
+END_TEST
+
 Suite* json_suite()
 {
     Suite* s;
@@ -151,6 +204,9 @@ Suite* json_suite()
     tcase_add_test(tc_core, nested_object_json_parse_t);
     tcase_add_test(tc_core, simple_json_parse_fail_t);
     tcase_add_test(tc_core, simple_json_bool_and_number_t);
+    tcase_add_test(tc_core, json_kw_array_len0_t);
+    tcase_add_test(tc_core, json_kw_array_len1_t);
+    tcase_add_test(tc_core, json_kw_array_len5_t);
     suite_add_tcase(s, tc_core);
 
     return s;
