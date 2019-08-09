@@ -60,7 +60,15 @@ class TestSimpleCallback(unittest.TestCase):
             j = json.loads(data)
             self.assertEqual(j['result'], 'not found')
 
-
+    def test_parameter_return(self):
+        req = re.Request(url=f"{server}/req/test/123", method='POST', data=b'{"tdata": "test1"}')
+        with re.urlopen(req) as f:
+            data = f.read()
+            self.assertNotEqual(data, None)
+            self.assertNotIn('error', str(data))
+            j = json.loads(data)
+            self.assertEqual(j['num'], 'test')
+            self.assertEqual(j['id'], '123')
 
 if __name__ == '__main__':
         unittest.main()

@@ -13,12 +13,10 @@ void simple_callback(Response* res, Request* req)
     STRINGP_FREE(jstring);
 }
 
-#include <stdio.h>
 void data_callback(Response* res, Request* req)
 {
     bool success;
     JSONObject* json_obj = parse_json(&req->content, &success);
-    printf("JSON content: %s\n", req->content.chars);
     char* json = NULL;
     if (success == false) {
         json = "{\"error\": \"Parse failed!\"}";
@@ -33,7 +31,6 @@ void data_callback(Response* res, Request* req)
         }
         STRINGP_FREE(tmp);
     }
-    printf("JSON: %s\n", json);
     JSONString* jstring = copy_chars(json, strlen(json));
     JSONObject* obj = parse_json(jstring, NULL);
     send_json(res, obj);
@@ -63,6 +60,11 @@ void parameter_callback(Response* res, Request* req)
     STRINGP_FREE(jstring);
 }
 
+void return_request_params(Response* res, Request* req)
+{
+    send_json(res, req->params);
+}
+
 int main(int argc, char const* argv[])
 {
 
@@ -71,5 +73,6 @@ int main(int argc, char const* argv[])
     add_url(&rs, "/", simple_callback);
     add_url(&rs, "/api", data_callback);
     add_url(&rs, "/parameter/:param", parameter_callback);
+    add_url(&rs, "/req/:num/:id", return_request_params);
     return run_server(&rs);
 }
