@@ -188,6 +188,21 @@ START_TEST(json_kw_array_len5_t)
 }
 END_TEST
 
+START_TEST(json_to_string_t)
+{
+    char json[] = "{\"array\":[\"single\",\"2\",\"false\",\"true\",{\"obj\":\"3\"}]}";
+    JSONString* jstring = copy_chars(json, 52);
+    bool succss = true;
+    JSONObject* obj = parse_json(jstring, &succss);
+    ck_assert_int_eq(succss, true);
+    JSONString* str = json_to_string(obj);
+    ck_assert_int_eq(str->len, 52);
+    ck_assert_int_eq(strncmp(str->chars, json, 52), 0);
+    free_json(obj);
+    STRINGP_FREE(str);
+}
+END_TEST
+
 Suite* json_suite()
 {
     Suite* s;
@@ -207,6 +222,7 @@ Suite* json_suite()
     tcase_add_test(tc_core, json_kw_array_len0_t);
     tcase_add_test(tc_core, json_kw_array_len1_t);
     tcase_add_test(tc_core, json_kw_array_len5_t);
+    tcase_add_test(tc_core, json_to_string_t);
     suite_add_tcase(s, tc_core);
 
     return s;

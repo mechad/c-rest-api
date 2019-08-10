@@ -261,7 +261,7 @@ static bool parse_keyword(JSONTokenArray* t_array, JSONObject* to)
             return table_set(to, copy_string(keyword.chars), val);
         }
     } break;
-    case T_SQUARE_OPEN:{
+    case T_SQUARE_OPEN: {
         JSONArray* arr = ALLOCATE(JSONArray, 1);
         init_array(arr);
         if (parse_array(t_array, arr)) {
@@ -311,7 +311,7 @@ static bool parse_object(JSONTokenArray* t_array, JSONObject* to)
 static bool parse_array(JSONTokenArray* t_array, JSONArray* to)
 {
     // Empty array
-    if (peak_token(t_array).type == T_SQUARE_CLOSE){
+    if (peak_token(t_array).type == T_SQUARE_CLOSE) {
         advance_token(t_array);
         return true;
     }
@@ -508,6 +508,22 @@ static void json_str_to_string(String* from, JSONString* to)
     STRING_APPEND(to, '"');
 }
 
+static void json_value_to_string(JSONValue* val, JSONString* to);
+
+static void json_array_to_string(JSONArray* arr, JSONString* to)
+{
+    int entries = 0;
+    STRING_APPEND(to, '[');
+    for (int i = 0; i < arr->length; i++) {
+        json_value_to_string(&arr->values[i], to);
+
+        if(entries < arr->length - 1)
+            STRING_APPEND(to, ',');
+        entries++;
+    }
+    STRING_APPEND(to, ']');
+}
+
 static void json_obj_to_string(JSONObject* obj, JSONString* to)
 {
     int entries = 0;
@@ -516,17 +532,8 @@ static void json_obj_to_string(JSONObject* obj, JSONString* to)
         if (obj->entries[i].key == NULL)
             continue;
         json_kw_to_string(obj->entries[i].key, to);
+        json_value_to_string(&obj->entries[i].value, to);
 
-        switch (obj->entries[i].value.type) {
-        case TYPE_STRING:
-            json_str_to_string((String*)obj->entries[i].value.data, to);
-            break;
-        case TYPE_OBJECT:
-            json_obj_to_string((JSONObject*)obj->entries[i].value.data, to);
-            break;
-        default:
-            break;
-        }
         // Add , char after every entry except the last one
         entries++;
         if (entries < obj->count - 2)
@@ -535,11 +542,29 @@ static void json_obj_to_string(JSONObject* obj, JSONString* to)
     STRING_APPEND(to, '}');
 }
 
+static void json_value_to_string(JSONValue* val, JSONString* to)
+{
+     switch (val->type) {
+        case TYPE_STRING:
+            json_str_to_string((JSONString*)val->data, to);
+            break;
+        case TYPE_OBJECT:
+            json_obj_to_string((JSONObject*)val->data, to);
+            break;
+        case TYPE_ARRAY:
+            json_array_to_string((JSONArray*)val->data, to);
+            break;
+        default:
+            break;
+        }
+}
+
 JSONString* json_to_string(JSONObject* obj)
 {
     JSONString* str = ALLOCATE(String, 1);
     STRING_INIT(str);
     json_obj_to_string(obj, str);
+    STRING_APPEND(str, '\0');
     return str;
 }
 
