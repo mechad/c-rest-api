@@ -26,25 +26,25 @@ OBJECTS := $(addprefix $(BUILD_DIR)/$(NAME)/, $(notdir $(SOURCES:.c=.o)))
 
 # Link the interpreter.
 build/$(NAME): $(OBJECTS)
-	@ printf "%8s %-40s %s\n" $(CC) $@ "$(CFLAGS)"
+	@ printf "%8s %-40s %s\n" $(CC) $@
 	@ mkdir -p build
 	@ $(CC) $(CFLAGS) $^ -o $@
 
 # Compile object files.
 $(BUILD_DIR)/$(NAME)/%.o: $(SOURCE_DIR)/%.c $(HEADERS)
-	@ printf "%8s %-40s %s\n" $(CC) $< "$(CFLAGS)"
+	@ printf "%8s %-40s %s\n" $(CC) $<
 	@ mkdir -p $(BUILD_DIR)/$(NAME)
 	@ $(CC) -c $(CFLAGS) -o $@ $<
 
 # Build subdirectory folders
 # TODO: is there cleaner way to do this?
 $(BUILD_DIR)/$(NAME)/%.o: $(SOURCE_DIR)/utils/%.c $(HEADERS)
-	@ printf "%8s %-40s %s\n" $(CC) $< "$(CFLAGS)"
+	@ printf "%8s %-40s %s\n" $(CC) $<
 	@ mkdir -p $(BUILD_DIR)/$(NAME)
 	@ $(CC) -c $(CFLAGS) -o $@ $<
 
 $(BUILD_DIR)/$(NAME)/%.o: $(SOURCE_DIR)/requests/%.c $(HEADERS)
-	@ printf "%8s %-40s %s\n" $(CC) $< "$(CFLAGS)"
+	@ printf "%8s %-40s %s\n" $(CC) $<
 	@ mkdir -p $(BUILD_DIR)/$(NAME)
 	@ $(CC) -c $(CFLAGS) -o $@ $<
 
