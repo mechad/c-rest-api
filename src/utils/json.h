@@ -12,10 +12,10 @@ typedef DataValue JSONValue;
 typedef Table JSONObject;
 typedef String JSONString;
 typedef Array JSONArray;
+typedef float JSONNumber;
+typedef bool JSONBool;
 
 #define JSONNull NULL
-#define JSONNumber float
-#define JSONBool bool
 
 #define AS_NUMBER(value) AS_VALUE(JSONNumber, value)
 #define AS_BOOL(value) AS_VALUE(JSONBool, value)
