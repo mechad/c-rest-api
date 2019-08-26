@@ -24,12 +24,11 @@ TESTS=(json server)
 # Integration tests
 I_TESTS=(simpleapi)
 
-# Compile the debug library to make sure the changes are applied
-make NAME=test MODE=debug &> /dev/null
+# Compile the library to make sure the changes are applied
+make NAME=restapitest -j`grep processor /proc/cpuinfo | wc -l` &> /dev/null
 
 # Find the project objects so we can test them
-# TODO: should we separate these for each test?
-OBJECTS=`find build/debug/test/ ! -name "main.o" -type f`
+OBJECTS=build/restapitest.o
 
 CC=gcc
 TEST_CFLAGS="-std=c99 -pthread -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-function -lcheck -lsubunit -lrt -lm"

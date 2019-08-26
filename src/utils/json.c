@@ -517,7 +517,7 @@ static void json_array_to_string(JSONArray* arr, JSONString* to)
     for (int i = 0; i < arr->length; i++) {
         json_value_to_string(&arr->values[i], to);
 
-        if(entries < arr->length - 1)
+        if (entries < arr->length - 1)
             STRING_APPEND(to, ',');
         entries++;
     }
@@ -544,19 +544,19 @@ static void json_obj_to_string(JSONObject* obj, JSONString* to)
 
 static void json_value_to_string(JSONValue* val, JSONString* to)
 {
-     switch (val->type) {
-        case TYPE_STRING:
-            json_str_to_string((JSONString*)val->data, to);
-            break;
-        case TYPE_OBJECT:
-            json_obj_to_string((JSONObject*)val->data, to);
-            break;
-        case TYPE_ARRAY:
-            json_array_to_string((JSONArray*)val->data, to);
-            break;
-        default:
-            break;
-        }
+    switch (val->type) {
+    case TYPE_STRING:
+        json_str_to_string((JSONString*)val->data, to);
+        break;
+    case TYPE_OBJECT:
+        json_obj_to_string((JSONObject*)val->data, to);
+        break;
+    case TYPE_ARRAY:
+        json_array_to_string((JSONArray*)val->data, to);
+        break;
+    default:
+        break;
+    }
 }
 
 JSONString* json_to_string(JSONObject* obj)
@@ -564,7 +564,8 @@ JSONString* json_to_string(JSONObject* obj)
     JSONString* str = ALLOCATE(String, 1);
     STRING_INIT(str);
     json_obj_to_string(obj, str);
-    STRING_APPEND(str, '\0');
+    // Json string gets malformed if we append null to it
+    // STRING_APPEND(str, '\0');
     return str;
 }
 

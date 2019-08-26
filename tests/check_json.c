@@ -196,7 +196,8 @@ START_TEST(json_to_string_t)
     JSONObject* obj = parse_json(jstring, &succss);
     ck_assert_int_eq(succss, true);
     JSONString* str = json_to_string(obj);
-    ck_assert_int_eq(str->len, 52);
+    // Length should be 51 since the null doesn't count as length
+    ck_assert_int_eq(str->len, 51);
     ck_assert_int_eq(strncmp(str->chars, json, 52), 0);
     free_json(obj);
     STRINGP_FREE(str);

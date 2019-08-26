@@ -1,6 +1,6 @@
 #include <stdlib.h>
 
-void* reallocate(void* previous, size_t oldSize, size_t newSize)
+void* __reallocate(void* previous, size_t oldSize, size_t newSize)
 {
     if (newSize == 0) {
         free(previous);

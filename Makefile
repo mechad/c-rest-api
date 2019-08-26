@@ -5,7 +5,12 @@
 # SOURCE_DIR   Directory where source files and headers are found.
 CC=gcc
 CFLAGS := -std=c99 -pthread -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-function
+LD=ld
 SOURCE_DIR = src
+
+ifndef NAME
+	NAME=restapi
+endif
 
 # Mode configuration.
 ifeq ($(MODE),debug)
@@ -26,9 +31,9 @@ OBJECTS := $(addprefix $(BUILD_DIR)/$(NAME)/, $(notdir $(SOURCES:.c=.o)))
 
 # Link the interpreter.
 build/$(NAME): $(OBJECTS)
-	@ printf "%8s %-40s %s\n" $(CC) $@
+	@ printf "%8s %-40s %s\n" $(LD) $@
 	@ mkdir -p build
-	@ $(CC) $(CFLAGS) $^ -o $@
+	$(LD) -r $^ -o build/$(NAME).o
 
 # Compile object files.
 $(BUILD_DIR)/$(NAME)/%.o: $(SOURCE_DIR)/%.c $(HEADERS)
