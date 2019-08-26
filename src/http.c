@@ -60,6 +60,7 @@
 // #include "crypto/sha1.h"
 // #include "dataframe.h"
 #include "http.h"
+#include "options.h"
 #include "server.h"
 #include "socketcon.h"
 
@@ -134,7 +135,8 @@ void* accept_client(void* clientptr)
         //TODO: serve static file
         http_404(&resp);
     }
-    printf("request handled\n");
+    if (_server_option_verbose_output)
+        printf("request handled\n");
     close(conn.conn_fd);
     free_request(&r);
 

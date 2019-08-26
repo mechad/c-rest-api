@@ -6,6 +6,7 @@
 #include <sys/types.h>
 
 #include "../datatypes.h"
+#include "../options.h"
 #include "../utils/memory.h"
 #include "request.h"
 
@@ -187,13 +188,15 @@ void parse_request(Request* r, Connection* conn)
     STRING_INIT(&m);
     STRING_INIT(&tmp);
     read_full_request(conn, &m);
-    printf("FULL MESSAGE:\n%s\n", m.chars);
+    if (_server_option_verbose_output)
+        printf("FULL MESSAGE:\n%s\n", m.chars);
     read_line(&m, &tmp, 0);
     parse_request_type(r, &tmp);
     parse_uri(r, &tmp);
     if (r->type == POST)
         parse_content(r, &m);
-    print_request(r);
+    if (_server_option_verbose_output)
+        print_request(r);
     STRING_FREE(&m);
     STRING_FREE(&tmp);
 }

@@ -1,8 +1,8 @@
 #ifndef REST_SERVER_H_
 #define REST_SERVER_H_
 
-#include "utils/hashtable.h"
 #include "requests/request.h"
+#include "utils/hashtable.h"
 
 typedef void (*RestCallback)(Response* resp, Request* test);
 
@@ -29,5 +29,8 @@ void add_url(RestServer* rs, char* endpoint, RestCallback cb);
 void init_server(RestServer* rs);
 int run_server(RestServer* rs);
 void free_server(RestServer* rs);
+
+void set_server_option_verbose_output();
+void set_server_option_tcp_port_number(unsigned short port);
 
 #endif

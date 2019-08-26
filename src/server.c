@@ -71,10 +71,23 @@
 #include <pthread.h>
 
 #include "http.h"
+#include "options.h"
 #include "requests/request.h"
 #include "server.h"
 
 RestServer __rs;
+volatile int _server_option_verbose_output = 0;
+volatile unsigned short _server_option_tcp_port = 8888;
+
+void set_server_option_verbose_output()
+{
+    _server_option_verbose_output = 1;
+}
+
+void set_server_option_tcp_port_number(unsigned short port)
+{
+    _server_option_tcp_port = port;
+}
 
 typedef struct
 {
@@ -354,12 +367,14 @@ int run_server(RestServer* rs)
 {
     __rs = *rs;
     order_endpoints(&__rs);
-    for (int i = 0; i < __rs.endpoint_len; i++) {
-        printf("Endpoint: %s\n", __rs.endpoints[i]->chars);
+    if (_server_option_verbose_output) {
+        for (int i = 0; i < __rs.endpoint_len; i++) {
+            printf("Endpoint: %s\n", __rs.endpoints[i]->chars);
+        }
     }
     // Ports range is 0-65535 (0x0000-0xffff)
     // which is exacly what uint16_t holds
-    uint16_t port = 8888;
+    uint16_t port = _server_option_tcp_port;
 
     pthread_t thread;
 
