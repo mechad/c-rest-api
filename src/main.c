@@ -1,4 +1,4 @@
-
+#ifdef DEBUG
 #include "server.h"
 #include "utils/hashtable.h"
 #include "utils/json.h"
@@ -60,3 +60,4 @@ int main(int argc, char const* argv[])
 
     // printf("%s\n", AS_STRING(r_tmp)->chars);
 }
+#endif
