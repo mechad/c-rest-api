@@ -139,7 +139,7 @@ static void parse_request_type(Request* r, String* line)
 
 static void parse_uri(Request* r, String* line)
 {
-    int start, i;
+    int start = 0, i;
     switch (r->type) {
     case GET:
         start = 4;
