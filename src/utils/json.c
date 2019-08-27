@@ -34,6 +34,52 @@ typedef struct {
 
 static bool parse_object(JSONTokenArray* t_array, JSONObject* to);
 static bool parse_array(JSONTokenArray* t_array, JSONArray* to);
+static JSONValue json_boolean_value(bool b);
+
+JSONValue json_value_string(String* str)
+{
+    JSONValue jval;
+    jval.type = TYPE_STRING;
+    jval.data = (void*)str;
+    return jval;
+}
+
+JSONValue json_value_string_c(const char* str)
+{
+    String* tmp = copy_chars(str, strlen(str));
+    return json_value_string(tmp);
+}
+
+JSONValue json_value_number(JSONNumber number)
+{
+    JSONValue jval;
+    jval.type = TYPE_NUMBER;
+    JSONNumber* tmp = ALLOCATE(JSONNumber, 1);
+    *tmp = number;
+    jval.data = (void*)tmp;
+    return jval;
+}
+
+JSONValue json_value_bool(JSONBool boolean)
+{
+    return json_boolean_value(boolean);
+}
+
+JSONValue json_value_array(JSONArray* array)
+{
+    JSONValue jval;
+    jval.type = TYPE_ARRAY;
+    jval.data = (void*)array;
+    return jval;
+}
+
+JSONValue json_value_object(JSONObject* obj)
+{
+    JSONValue jval;
+    jval.type = TYPE_OBJECT;
+    jval.data = (void*)obj;
+    return jval;
+}
 
 void free_json(JSONObject* obj)
 {
@@ -73,6 +119,21 @@ String* json_get_string_c(JSONObject* obj, const char* kw)
     return val;
 }
 
+bool json_add_string(JSONObject* obj, String* kw, const char* str)
+{
+    JSONValue jval;
+    jval.type = TYPE_STRING;
+    jval.data = (void*)copy_chars(str, (int)strlen(str));
+    return table_set(obj, kw, jval);
+}
+
+bool json_add_string_c(JSONObject* obj, const char* kw, const char* str)
+{
+    String* tmp = copy_chars(kw, (int)strlen(kw));
+    bool val = json_add_string(obj, tmp, str);
+    return val;
+}
+
 JSONObject* json_get_object(JSONObject* obj, String* kw)
 {
     DataValue tmp;
@@ -89,6 +150,20 @@ JSONObject* json_get_object_c(JSONObject* obj, const char* kw)
     String* tmp = copy_chars(kw, (int)strlen(kw));
     JSONObject* val = json_get_object(obj, tmp);
     STRINGP_FREE(tmp);
+    return val;
+}
+
+bool json_add_object(JSONObject* obj, String* kw, JSONObject* ob)
+{
+    JSONObject* copy = copy_table(ob);
+    JSONValue jval = json_value_object(copy);
+    return table_set(obj, kw, jval);
+}
+
+bool json_add_object_c(JSONObject* obj, const char* kw, JSONObject* ob)
+{
+    String* tmp = copy_chars(kw, (int)strlen(kw));
+    bool val = json_add_object(obj, tmp, ob);
     return val;
 }
 
@@ -111,6 +186,19 @@ JSONBool* json_get_bool_c(JSONObject* obj, const char* kw)
     return val;
 }
 
+bool json_add_bool(JSONObject* obj, String* kw, JSONBool boolean)
+{
+    JSONValue jval = json_boolean_value(boolean);
+    return table_set(obj, kw, jval);
+}
+
+bool json_add_bool_c(JSONObject* obj, const char* kw, JSONBool boolean)
+{
+    String* tmp = copy_chars(kw, (int)strlen(kw));
+    bool val = json_add_bool(obj, tmp, boolean);
+    return val;
+}
+
 JSONNumber* json_get_number(JSONObject* obj, String* kw)
 {
     DataValue tmp;
@@ -127,6 +215,23 @@ JSONNumber* json_get_number_c(JSONObject* obj, const char* kw)
     String* tmp = copy_chars(kw, (int)strlen(kw));
     JSONNumber* val = json_get_number(obj, tmp);
     STRINGP_FREE(tmp);
+    return val;
+}
+
+bool json_add_number(JSONObject* obj, String* kw, JSONNumber number)
+{
+    JSONValue jval;
+    JSONNumber* tmp = ALLOCATE(JSONNumber, 1);
+    *tmp = number;
+    jval.type = TYPE_NUMBER;
+    jval.data = (void*)tmp;
+    return table_set(obj, kw, jval);
+}
+
+bool json_add_number_c(JSONObject* obj, const char* kw, JSONNumber number)
+{
+    String* tmp = copy_chars(kw, (int)strlen(kw));
+    bool val = json_add_number(obj, tmp, number);
     return val;
 }
 
@@ -147,6 +252,31 @@ JSONArray* json_get_array_c(JSONObject* obj, const char* kw)
     JSONArray* val = json_get_array(obj, tmp);
     STRINGP_FREE(tmp);
     return val;
+}
+
+bool json_add_array(JSONObject* obj, String* kw, JSONArray* arr)
+{
+    //TODO: copy array
+    JSONValue val = json_value_array(arr);
+    return table_set(obj, kw, val);
+}
+
+bool json_add_array_c(JSONObject* obj, const char* kw, JSONArray* arr)
+{
+    String* tmp = copy_chars(kw, (int)strlen(kw));
+    bool val = json_add_array(obj, tmp, arr);
+    return val;
+}
+
+void json_array_append_value(JSONArray* arr, JSONValue value)
+{
+    if (arr->capacity < arr->length + 1) {
+        int _old_capacity = arr->capacity;
+        arr->capacity = GROW_CAPACITY(_old_capacity);
+        arr->values = GROW_ARRAY(arr->values, JSONValue, _old_capacity, arr->capacity);
+    }
+    arr->values[arr->length] = value;
+    arr->length++;
 }
 
 static int is_white_space(char c)

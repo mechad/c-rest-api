@@ -63,6 +63,7 @@ typedef struct
 {
     DataValue* values;
     int length;
+    int capacity;
 } Array;
 
 #define STRING_APPEND(str, c)                                                              \
