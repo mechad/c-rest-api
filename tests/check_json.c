@@ -204,6 +204,81 @@ START_TEST(json_to_string_t)
 }
 END_TEST
 
+START_TEST(json_add_to_obj_basic_t)
+{
+    JSONObject* obj = ALLOCATE(JSONObject, 1);
+    init_json(obj);
+    bool result = json_add_string_c(obj, "string", "1234");
+    ck_assert_int_eq(result, true);
+    JSONString* tmpstr = json_get_string_c(obj, "string");
+    ck_assert_str_eq(tmpstr->chars, "1234");
+    result = json_add_bool_c(obj, "boolean", true);
+    ck_assert_int_eq(result, true);
+    JSONBool* tmpbool = json_get_bool_c(obj, "boolean");
+    ck_assert_int_eq(*tmpbool, true);
+    JSONNumber _num = (JSONNumber)1234;
+    result = json_add_number_c(obj, "number", _num);
+    ck_assert_int_eq((int)result, true);
+    JSONNumber* tmpnum = json_get_number_c(obj, "number");
+    ck_assert_int_eq(*tmpnum, 1234);
+    free_json(obj);
+}
+END_TEST
+
+START_TEST(json_add_to_obj_array_t)
+{
+    char json[] = "{\"name\": \"sample\"}";
+    JSONString* jstring = copy_chars(json, 19);
+    bool succss = false;
+    JSONObject* obj_t = parse_json(jstring, &succss);
+    ck_assert_int_eq(succss, true);
+    JSONObject* obj = ALLOCATE(JSONObject, 1);
+    init_json(obj);
+    JSONArray* arr = ALLOCATE(JSONArray, 1);
+    init_array(arr);
+    JSONValue boolean = json_value_bool(true);
+    JSONValue string = json_value_string_c("array");
+    JSONValue number = json_value_number(1234);
+    JSONValue object = json_value_object(obj_t);
+    json_array_append_value(arr, boolean);
+    json_array_append_value(arr, string);
+    json_array_append_value(arr, number);
+    json_array_append_value(arr, object);
+    json_add_array_c(obj, "arrayname", arr);
+    JSONArray* t_arr = json_get_array_c(obj, "arrayname");
+    ck_assert_int_eq(IS_BOOL(t_arr->values[0]), 1);
+    ck_assert_int_eq(IS_STRING(t_arr->values[1]), 1);
+    ck_assert_int_eq(IS_NUMBER(t_arr->values[2]), 1);
+    ck_assert_int_eq(IS_OBJ(t_arr->values[3]), 1);
+    ck_assert_int_eq(*AS_BOOL(t_arr->values[0]), 1);
+    ck_assert_str_eq(AS_CSTRING(t_arr->values[1]), "array");
+    ck_assert_int_eq((int)*AS_NUMBER(t_arr->values[2]), 1234);
+    JSONString* nr = json_get_string_c(AS_OBJ(arr->values[3]), "name");
+    ck_assert_str_eq(nr->chars, "sample");
+    free_json(obj);
+    free_json(obj_t);
+}
+END_TEST
+
+START_TEST(json_add_to_obj_obj_t)
+{
+    char json[] = "{\"name\": \"sample\"}";
+    JSONString* jstring = copy_chars(json, 19);
+    bool succss = false;
+    JSONObject* obj_t = parse_json(jstring, &succss);
+    ck_assert_int_eq(succss, true);
+    JSONObject* obj = ALLOCATE(JSONObject, 1);
+    init_json(obj);
+    bool result = json_add_object_c(obj, "obj", obj_t);
+    ck_assert_int_eq(result, true);
+    JSONObject* r_obj = json_get_object_c(obj, "obj");
+    JSONString* nr = json_get_string_c(r_obj, "name");
+    ck_assert_str_eq(nr->chars, "sample");
+    free_json(obj);
+    free_json(obj_t);
+}
+END_TEST
+
 Suite* json_suite()
 {
     Suite* s;
@@ -224,6 +299,9 @@ Suite* json_suite()
     tcase_add_test(tc_core, json_kw_array_len1_t);
     tcase_add_test(tc_core, json_kw_array_len5_t);
     tcase_add_test(tc_core, json_to_string_t);
+    tcase_add_test(tc_core, json_add_to_obj_basic_t);
+    tcase_add_test(tc_core, json_add_to_obj_array_t);
+    tcase_add_test(tc_core, json_add_to_obj_obj_t);
     suite_add_tcase(s, tc_core);
 
     return s;
