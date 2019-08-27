@@ -190,15 +190,15 @@ END_TEST
 
 START_TEST(json_to_string_t)
 {
-    char json[] = "{\"array\":[\"single\",\"2\",\"false\",\"true\",{\"obj\":\"3\"}]}";
+    char json[] = "{\"array\":[\"single\",2,false,true,{\"obj\":3}]}";
     JSONString* jstring = copy_chars(json, 52);
     bool succss = true;
     JSONObject* obj = parse_json(jstring, &succss);
     ck_assert_int_eq(succss, true);
     JSONString* str = json_to_string(obj);
-    // Length should be 51 since the null doesn't count as length
-    ck_assert_int_eq(str->len, 51);
-    ck_assert_int_eq(strncmp(str->chars, json, 52), 0);
+    // Length should be 43 since the null doesn't count as length
+    ck_assert_int_eq(str->len, 43);
+    ck_assert_int_eq(strncmp(str->chars, json, 44), 0);
     free_json(obj);
     STRINGP_FREE(str);
 }

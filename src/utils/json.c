@@ -638,6 +638,26 @@ static void json_str_to_string(String* from, JSONString* to)
     STRING_APPEND(to, '"');
 }
 
+static void json_number_to_string(JSONNumber* num, JSONString* to)
+{
+    char numstr[50];
+    snprintf(numstr, 50, "%g", *num);
+    int numlen = (int)strlen(numstr);
+    STRING_APPEND_CSTRING(to, numstr, numlen);
+}
+
+static void json_boolean_to_string(JSONBool* boolean, JSONString* to)
+{
+    const char* t = "true";
+    const char* f = "false";
+
+    if(*boolean){
+        STRING_APPEND_CSTRING(to, t, 4);
+    }else{
+        STRING_APPEND_CSTRING(to, f, 5);
+    }
+}
+
 static void json_value_to_string(JSONValue* val, JSONString* to);
 
 static void json_array_to_string(JSONArray* arr, JSONString* to)
@@ -683,6 +703,12 @@ static void json_value_to_string(JSONValue* val, JSONString* to)
         break;
     case TYPE_ARRAY:
         json_array_to_string((JSONArray*)val->data, to);
+        break;
+    case TYPE_NUMBER:
+        json_number_to_string((JSONNumber*)val->data, to);
+        break;
+    case TYPE_BOOL:
+        json_boolean_to_string((JSONBool*)val->data, to);
         break;
     default:
         break;
