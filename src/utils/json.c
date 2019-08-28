@@ -92,11 +92,33 @@ void free_json(JSONObject* obj)
                 // we also need to free the allocated pointer
             } else if (obj->entries[i].value.type == TYPE_STRING) {
                 STRINGP_FREE((String*)obj->entries[i].value.data);
+            } else if (obj->entries[i].value.type == TYPE_ARRAY) {
+                free_json_array((Array*)obj->entries[i].value.data);
             }
         }
     }
     free_table(obj);
     FREE(JSONObject, obj);
+}
+
+void free_json_array(JSONArray* arr)
+{
+    for(int i = 0; i < arr->length; i++) {
+        switch (arr->values[i].type)
+        {
+        case TYPE_ARRAY:
+            free_json_array((Array*)arr->values[i].data);
+            break;
+        case TYPE_OBJECT:
+            free_json((JSONObject*)arr->values[i].data);
+            break;
+        case TYPE_STRING:
+            STRINGP_FREE((String*)arr->values[i].data);
+        default:
+            break;
+        }
+    }
+    free(arr);
 }
 
 String* json_get_string(JSONObject* obj, String* kw)

@@ -34,6 +34,7 @@ JSONValue json_value_object(JSONObject* obj);
 void json_array_append_value(JSONArray* arr, JSONValue value);
 
 void free_json(JSONObject* obj);
+void free_json_array(JSONArray* arr);
 String* json_get_string(JSONObject* obj, String* kw);
 String* json_get_string_c(JSONObject* obj, const char* kw);
 bool json_add_string(JSONObject* obj, String* kw, const char* str);

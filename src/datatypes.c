@@ -51,4 +51,5 @@ void init_array(Array* arr)
 {
     arr->values = NULL;
     arr->length = 0;
+    arr->capacity = 0;
 }
