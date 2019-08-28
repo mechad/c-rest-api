@@ -255,7 +255,6 @@ START_TEST(json_add_to_obj_array_t)
     ck_assert_int_eq((int)*AS_NUMBER(t_arr->values[2]), 1234);
     JSONString* nr = json_get_string_c(AS_OBJ(arr->values[3]), "name");
     ck_assert_str_eq(nr->chars, "sample");
-    free_json(obj);
     free_json(obj_t);
 }
 END_TEST
