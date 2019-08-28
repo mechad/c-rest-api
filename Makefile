@@ -31,9 +31,9 @@ OBJECTS := $(addprefix $(BUILD_DIR)/$(NAME)/, $(notdir $(SOURCES:.c=.o)))
 
 # Link the interpreter.
 build/$(NAME): $(OBJECTS)
-	@ printf "%8s %-40s %s\n" $(LD) $@
+	@ printf "%8s %-40s %s\n" $(LD) $@.o
 	@ mkdir -p build
-	$(LD) -r $^ -o build/$(NAME).o
+	@ $(LD) -r $^ -o build/$(NAME).o
 
 # Compile object files.
 $(BUILD_DIR)/$(NAME)/%.o: $(SOURCE_DIR)/%.c $(HEADERS)
