@@ -22,7 +22,7 @@ trap error ERR
 # Test names
 TESTS=(json server)
 # Integration tests
-I_TESTS=(simpleapi)
+I_TESTS=(staticfiles simpleapi)
 
 # Compile the library to make sure the changes are applied
 make NAME=restapitest -j`grep processor /proc/cpuinfo | wc -l` &> /dev/null
